@@ -22,7 +22,7 @@ public class OrdiniProdottiEntity {
     private ProdottiEntity prodotto;
 
     @Column(name = "quantita_prodotto", nullable = false)
-    private Long quantitaProdotto;
+    private Integer quantitaProdotto;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "stato_pagato", nullable = false)
@@ -31,7 +31,7 @@ public class OrdiniProdottiEntity {
     public OrdiniProdottiEntity() {
     }
 
-    public OrdiniProdottiEntity(OrdiniProdottiId id, OrdiniEntity ordine, ProdottiEntity prodotto, Long quantitaProdotto, StatoPagato statoPagato) {
+    public OrdiniProdottiEntity(OrdiniProdottiId id, OrdiniEntity ordine, ProdottiEntity prodotto, Integer quantitaProdotto, StatoPagato statoPagato) {
         this.id = id;
         this.ordine = ordine;
         this.prodotto = prodotto;
@@ -63,11 +63,11 @@ public class OrdiniProdottiEntity {
         this.prodotto = prodotto;
     }
 
-    public Long getQuantitaProdotto() {
+    public Integer getQuantitaProdotto() {
         return quantitaProdotto;
     }
 
-    public void setQuantitaProdotto(Long quantitaProdotto) {
+    public void setQuantitaProdotto(Integer quantitaProdotto) {
         this.quantitaProdotto = quantitaProdotto;
     }
 

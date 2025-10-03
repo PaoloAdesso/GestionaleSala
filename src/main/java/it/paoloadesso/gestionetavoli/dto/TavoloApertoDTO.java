@@ -1,27 +1,27 @@
 package it.paoloadesso.gestionetavoli.dto;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import it.paoloadesso.gestionetavoli.enums.StatoTavolo;
 
 public class TavoloApertoDTO {
     private Long tavoloId;
     private String numeroNomeTavolo;
-    private Long ordineId;
-    private BigDecimal totaleNonPagato;
-    private Integer numeroProdottiNonPagati;
-    private LocalDateTime oraApertura;
+    private StatoTavolo statoTavolo;
 
-    public TavoloApertoDTO() {}
-
-    public TavoloApertoDTO(Long tavoloId, String numeroNomeTavolo, Long ordineId,
-                           BigDecimal totaleNonPagato, Integer numeroProdottiNonPagati,
-                           LocalDateTime oraApertura) {
+    public TavoloApertoDTO(Long tavoloId, String numeroNomeTavolo, StatoTavolo statoTavolo) {
         this.tavoloId = tavoloId;
         this.numeroNomeTavolo = numeroNomeTavolo;
-        this.ordineId = ordineId;
-        this.totaleNonPagato = totaleNonPagato;
-        this.numeroProdottiNonPagati = numeroProdottiNonPagati;
-        this.oraApertura = oraApertura;
+        this.statoTavolo = statoTavolo;
+    }
+
+    public TavoloApertoDTO() {
+    }
+
+    public StatoTavolo getStatoTavolo() {
+        return statoTavolo;
+    }
+
+    public void setStatoTavolo(StatoTavolo statoTavolo) {
+        this.statoTavolo = statoTavolo;
     }
 
     public Long getTavoloId() {
@@ -38,37 +38,5 @@ public class TavoloApertoDTO {
 
     public void setNumeroNomeTavolo(String numeroNomeTavolo) {
         this.numeroNomeTavolo = numeroNomeTavolo;
-    }
-
-    public Long getOrdineId() {
-        return ordineId;
-    }
-
-    public void setOrdineId(Long ordineId) {
-        this.ordineId = ordineId;
-    }
-
-    public BigDecimal getTotaleNonPagato() {
-        return totaleNonPagato;
-    }
-
-    public void setTotaleNonPagato(BigDecimal totaleNonPagato) {
-        this.totaleNonPagato = totaleNonPagato;
-    }
-
-    public Integer getNumeroProdottiNonPagati() {
-        return numeroProdottiNonPagati;
-    }
-
-    public void setNumeroProdottiNonPagati(Integer numeroProdottiNonPagati) {
-        this.numeroProdottiNonPagati = numeroProdottiNonPagati;
-    }
-
-    public LocalDateTime getOraApertura() {
-        return oraApertura;
-    }
-
-    public void setOraApertura(LocalDateTime oraApertura) {
-        this.oraApertura = oraApertura;
     }
 }

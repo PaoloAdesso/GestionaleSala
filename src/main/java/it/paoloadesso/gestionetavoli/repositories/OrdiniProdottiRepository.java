@@ -1,8 +1,10 @@
 package it.paoloadesso.gestionetavoli.repositories;
 
+import it.paoloadesso.gestionetavoli.entities.OrdiniEntity;
 import it.paoloadesso.gestionetavoli.entities.OrdiniProdottiEntity;
 import it.paoloadesso.gestionetavoli.entities.keys.OrdiniProdottiId;
 import it.paoloadesso.gestionetavoli.enums.StatoOrdine;
+import it.paoloadesso.gestionetavoli.enums.StatoPagato;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -15,6 +17,8 @@ public interface OrdiniProdottiRepository extends JpaRepository<OrdiniProdottiEn
     List<OrdiniProdottiEntity> findByOrdine_Tavolo_Id(Long idTavolo);
 
     List<OrdiniProdottiEntity> findByOrdine_Tavolo_IdAndOrdine_StatoOrdineNot(Long idTavolo, StatoOrdine stato);
+
+    List<OrdiniProdottiEntity> findByOrdineAndStatoPagato(OrdiniEntity ordine, StatoPagato statoPagato);
 
     List<OrdiniProdottiEntity> findByOrdineTavoloIdAndOrdineDataOrdineAndOrdineStatoOrdineNot(Long idTavolo, LocalDate data, StatoOrdine stato);
 
