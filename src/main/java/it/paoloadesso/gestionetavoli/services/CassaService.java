@@ -1,17 +1,9 @@
 package it.paoloadesso.gestionetavoli.services;
 
-import it.paoloadesso.gestionetavoli.dto.OrdineConProdottiDTO;
-import it.paoloadesso.gestionetavoli.dto.ProdottoNonPagatoDTO;
-import it.paoloadesso.gestionetavoli.dto.TavoloApertoConDettagliOrdineDTO;
-import it.paoloadesso.gestionetavoli.dto.TavoloApertoDTO;
-import it.paoloadesso.gestionetavoli.entities.OrdiniEntity;
-import it.paoloadesso.gestionetavoli.entities.OrdiniProdottiEntity;
-import it.paoloadesso.gestionetavoli.entities.TavoliEntity;
-import it.paoloadesso.gestionetavoli.enums.StatoOrdine;
-import it.paoloadesso.gestionetavoli.enums.StatoPagato;
-import it.paoloadesso.gestionetavoli.repositories.OrdiniProdottiRepository;
-import it.paoloadesso.gestionetavoli.repositories.OrdiniRepository;
-
+import it.paoloadesso.gestionetavoli.dto.*;
+import it.paoloadesso.gestionetavoli.entities.*;
+import it.paoloadesso.gestionetavoli.enums.*;
+import it.paoloadesso.gestionetavoli.repositories.*;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -31,113 +23,90 @@ public class CassaService {
     }
 
     public List<TavoloApertoDTO> getTavoliAperti() {
-        // Uso il metodo di aiuto per ottenere la mappa raggruppata per tavolo
-        Map<TavoliEntity, List<OrdiniEntity>> ordiniPerTavolo = getOrdiniApertiRaggruppatiPerTavolo();
+        // Prendo tutti gli ordini non chiusi
+        List<OrdiniEntity> tavoliAperti = ordiniRepository.findByStatoOrdineNot(StatoOrdine.CHIUSO);
 
-        // Per ogni tavolo nella mappa, creo un DTO semplice (senza dettagli ordini)
-        return ordiniPerTavolo.keySet().stream()
+        // Filtro solo gli ordini con prodotti non pagati, estraggo i tavoli e tolgo duplicati; infine li trasformo in DTO
+        List<TavoloApertoDTO> tavoliApertiDto = tavoliAperti.stream()
+                .filter(ordine -> !ordiniProdottiRepository.findByOrdineAndStatoPagato(ordine, StatoPagato.NON_PAGATO)
+                        .isEmpty())
+                .map(OrdiniEntity::getTavolo)
+                .distinct()
                 .map(tavolo -> new TavoloApertoDTO(
                         tavolo.getId(),
                         tavolo.getNumeroNomeTavolo(),
                         tavolo.getStatoTavolo()
                 ))
-                .collect(Collectors.toList());
+                .toList();
+
+        return tavoliApertiDto;
     }
 
-    public List<TavoloApertoConDettagliOrdineDTO> getDettaglioTavoliAperti() {
-        // Uso lo stesso metodo di aiuto per ottenere la mappa raggruppata
-        Map<TavoliEntity, List<OrdiniEntity>> ordiniPerTavolo = getOrdiniApertiRaggruppatiPerTavolo();
+    public List<TavoloApertoConDettagliOrdineDTO> getTavoliApertiConDettagliOrdini() {
+        // Creo una mappa tavolo → ordini filtrando quelli con prodotti non pagati
+        Map<TavoliEntity, List<OrdiniEntity>> ordiniPerTavolo = ordiniRepository.findByStatoOrdineNot(StatoOrdine.CHIUSO).stream()
+                .filter(ordine -> !ordiniProdottiRepository
+                        .findByOrdineAndStatoPagato(ordine, StatoPagato.NON_PAGATO)
+                        .isEmpty())
+                .collect(Collectors.groupingBy(OrdiniEntity::getTavolo));
 
-        // Per ogni entry della mappa (tavolo + lista ordini)
-        return ordiniPerTavolo.entrySet().stream()
+        // Per ogni tavolo costruisco il DTO dettagliato con ordini e calcolo il totale complessivo
+        List<TavoloApertoConDettagliOrdineDTO> listaDto = ordiniPerTavolo.entrySet().stream()
                 .map(entry -> {
                     TavoliEntity tavolo = entry.getKey();
                     List<OrdiniEntity> ordiniDelTavolo = entry.getValue();
 
-                    // Trasformo ogni ordine del tavolo in DTO completo usando il metodo di aiuto
-                    List<OrdineConProdottiDTO> ordiniDTO = ordiniDelTavolo.stream()
-                            .map(this::creaOrdineConProdottiDto)
-                            .collect(Collectors.toList());
+                    // Trasformo tutti gli ordini del tavolo in DTO completi con prodotti
+                    List<OrdineConProdottiDTO> ordiniConProdottiDto = ordiniDelTavolo.stream()
+                            .map(this::creaOrdineConProdotti)
+                            .toList();
 
-                    // Calcolo il totale complessivo di tutti gli ordini del tavolo
-                    BigDecimal totaleComplessivo = calcolaTotaleComplessivo(ordiniDTO);
+                    // Calcolo il totale del tavolo sommando i totali degli ordini
+                    BigDecimal totaleTavolo = ordiniConProdottiDto.stream()
+                            .map(OrdineConProdottiDTO::getTotaleOrdine)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
 
                     return new TavoloApertoConDettagliOrdineDTO(
                             tavolo.getId(),
                             tavolo.getNumeroNomeTavolo(),
-                            ordiniDTO,
-                            totaleComplessivo
+                            ordiniConProdottiDto,
+                            totaleTavolo
                     );
                 })
-                .collect(Collectors.toList());
+                .toList();
+
+        return listaDto;
     }
 
-    /**
-     * Metodo di aiuto: trasforma una singola riga ordini_prodotti in DTO prodotto.
-     * Calcola il subtotale moltiplicando prezzo per quantità.
-     */
     private ProdottoNonPagatoDTO creaProdottoNonPagato(OrdiniProdottiEntity prodotto) {
+        // Creo un DTO prodotto con dettagli e calcolo il subtotale moltiplicando prezzo e quantità
         return new ProdottoNonPagatoDTO(
                 prodotto.getProdotto().getId(),
                 prodotto.getProdotto().getNome(),
                 prodotto.getProdotto().getPrezzo(),
                 prodotto.getQuantitaProdotto(),
-                // Calcolo subtotale: prezzo * quantità
-                prodotto.getProdotto().getPrezzo()
-                        .multiply(BigDecimal.valueOf(prodotto.getQuantitaProdotto()))
-        );
+                prodotto.getProdotto().getPrezzo().multiply(BigDecimal.valueOf(prodotto.getQuantitaProdotto())));
     }
 
-    /**
-     * Metodo di aiuto: trasforma un ordine completo in DTO con tutti i suoi prodotti non pagati.
-     * Prima recupera i prodotti non pagati, poi li trasforma in DTO e calcola il totale.
-     */
-    private OrdineConProdottiDTO creaOrdineConProdottiDto(OrdiniEntity ordine) {
-        // Cerco tutti i prodotti non pagati per questo ordine
-        List<OrdiniProdottiEntity> prodottiNonPagati =
-                ordiniProdottiRepository.findByOrdineAndStatoPagato(ordine, StatoPagato.NON_PAGATO);
+    private OrdineConProdottiDTO creaOrdineConProdotti(OrdiniEntity ordine) {
+        // Prendo tutti i prodotti non pagati dell’ordine
+        List<OrdiniProdottiEntity> prodottiNonPagati = ordiniProdottiRepository.findByOrdineAndStatoPagato(ordine, StatoPagato.NON_PAGATO);
 
-        // Trasformo ogni prodotto in DTO usando il metodo di aiuto
+        // Li trasformo in DTO
         List<ProdottoNonPagatoDTO> prodottiDto = prodottiNonPagati.stream()
                 .map(this::creaProdottoNonPagato)
-                .collect(Collectors.toList());
+                .toList();
 
-        // Sommo tutti i subtotali per avere il totale dell'ordine
+        // Calcolo il totale dell’ordine sommando tutti i subtotali dei prodotti
         BigDecimal totaleOrdine = prodottiDto.stream()
                 .map(ProdottoNonPagatoDTO::getSubtotale)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+        // Creo e ritorno il DTO ordine con totale e lista prodotti
         return new OrdineConProdottiDTO(
                 ordine.getIdOrdine(),
                 totaleOrdine,
                 prodottiDto
         );
-    }
-
-    /**
-     * Metodo di aiuto: somma tutti i totali di una lista di ordini per avere il totale complessivo.
-     * Uso reduce per sommare tutti i BigDecimal in un colpo solo.
-     */
-    private BigDecimal calcolaTotaleComplessivo(List<OrdineConProdottiDTO> ordini) {
-        return ordini.stream()
-                .map(OrdineConProdottiDTO::getTotaleOrdine)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
-
-    /**
-     * Metodo di aiuto: trova tutti gli ordini aperti e li raggruppa per tavolo.
-     * Prima filtro gli ordini che hanno prodotti non pagati, poi li raggruppo per tavolo.
-     */
-    private Map<TavoliEntity, List<OrdiniEntity>> getOrdiniApertiRaggruppatiPerTavolo() {
-        // Cerco tutti gli ordini che NON sono chiusi
-        List<OrdiniEntity> ordiniEntity = ordiniRepository.findByStatoOrdineNot(StatoOrdine.CHIUSO);
-
-        return ordiniEntity.stream()
-                // Tengo solo gli ordini che hanno almeno un prodotto non pagato
-                .filter(ordine -> !ordiniProdottiRepository
-                        .findByOrdineAndStatoPagato(ordine, StatoPagato.NON_PAGATO)
-                        .isEmpty())
-                // Raggruppo per tavolo: il risultato è una mappa tavolo → lista ordini
-                .collect(Collectors.groupingBy(OrdiniEntity::getTavolo));
     }
 }

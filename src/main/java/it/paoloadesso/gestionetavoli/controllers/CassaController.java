@@ -28,7 +28,7 @@ public class CassaController {
     }
 
     @GetMapping("/dettaglio-tavoli-aperti")
-    public ResponseEntity<List<TavoloApertoConDettagliOrdineDTO>> getDettaglioTavoliAperti() {
-        return ResponseEntity.ok(cassaService.getDettaglioTavoliAperti());
+    public ResponseEntity<List<TavoloApertoConDettagliOrdineDTO>> getTavoliApertiConDettagliOrdini() {
+        return ResponseEntity.ok(cassaService.getTavoliApertiConDettagliOrdini());
     }
 }
