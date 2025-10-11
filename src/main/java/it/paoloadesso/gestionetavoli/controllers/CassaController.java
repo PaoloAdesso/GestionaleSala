@@ -3,11 +3,10 @@ package it.paoloadesso.gestionetavoli.controllers;
 import it.paoloadesso.gestionetavoli.dto.TavoloApertoConDettagliOrdineDTO;
 import it.paoloadesso.gestionetavoli.dto.TavoloApertoDTO;
 import it.paoloadesso.gestionetavoli.services.CassaService;
+import it.paoloadesso.gestionetavoli.services.OrdineService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -17,7 +16,6 @@ import java.util.List;
 public class CassaController {
 
     private final CassaService cassaService;
-
     public CassaController(CassaService cassaService) {
         this.cassaService = cassaService;
     }
@@ -31,4 +29,5 @@ public class CassaController {
     public ResponseEntity<List<TavoloApertoConDettagliOrdineDTO>> getTavoliApertiConDettagliOrdini() {
         return ResponseEntity.ok(cassaService.getTavoliApertiConDettagliOrdini());
     }
+
 }
