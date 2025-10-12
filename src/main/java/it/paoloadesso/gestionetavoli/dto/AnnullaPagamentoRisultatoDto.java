@@ -5,18 +5,20 @@ import java.time.LocalDateTime;
 
 public class AnnullaPagamentoRisultatoDto {
     private Long idOrdine;
-    private int prodottiNonPagati;
+    private int quantitaProdottiNonPagati;
+    private int totalePezziNonPagati;
     private BigDecimal totalePagamentiAnnullati;
     private LocalDateTime timestampAnnullamentoPagamento;
 
-    public AnnullaPagamentoRisultatoDto(Long idOrdine, int prodottiNonPagati, BigDecimal totalePagamentiAnnullati, LocalDateTime timestampAnnullamentoPagamento) {
-        this.idOrdine = idOrdine;
-        this.prodottiNonPagati = prodottiNonPagati;
-        this.totalePagamentiAnnullati = totalePagamentiAnnullati;
-        this.timestampAnnullamentoPagamento = timestampAnnullamentoPagamento;
+    public AnnullaPagamentoRisultatoDto() {
     }
 
-    public AnnullaPagamentoRisultatoDto() {
+    public AnnullaPagamentoRisultatoDto(Long idOrdine, int quantitaProdottiNonPagati, int totalePezziNonPagati, BigDecimal totalePagamentiAnnullati, LocalDateTime timestampAnnullamentoPagamento) {
+        this.idOrdine = idOrdine;
+        this.quantitaProdottiNonPagati = quantitaProdottiNonPagati;
+        this.totalePezziNonPagati = totalePezziNonPagati;
+        this.totalePagamentiAnnullati = totalePagamentiAnnullati;
+        this.timestampAnnullamentoPagamento = timestampAnnullamentoPagamento;
     }
 
     public Long getIdOrdine() {
@@ -27,12 +29,20 @@ public class AnnullaPagamentoRisultatoDto {
         this.idOrdine = idOrdine;
     }
 
-    public int getProdottiNonPagati() {
-        return prodottiNonPagati;
+    public int getQuantitaProdottiNonPagati() {
+        return quantitaProdottiNonPagati;
     }
 
-    public void setProdottiNonPagati(int prodottiNonPagati) {
-        this.prodottiNonPagati = prodottiNonPagati;
+    public void setQuantitaProdottiNonPagati(int quantitaProdottiNonPagati) {
+        this.quantitaProdottiNonPagati = quantitaProdottiNonPagati;
+    }
+
+    public int getTotalePezziNonPagati() {
+        return totalePezziNonPagati;
+    }
+
+    public void setTotalePezziNonPagati(int totalePezziNonPagati) {
+        this.totalePezziNonPagati = totalePezziNonPagati;
     }
 
     public BigDecimal getTotalePagamentiAnnullati() {

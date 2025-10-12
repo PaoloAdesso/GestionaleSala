@@ -5,11 +5,14 @@ import it.paoloadesso.gestionetavoli.dto.PagamentoRisultatoDto;
 import it.paoloadesso.gestionetavoli.entities.OrdiniEntity;
 import it.paoloadesso.gestionetavoli.entities.OrdiniProdottiEntity;
 import it.paoloadesso.gestionetavoli.entities.keys.OrdiniProdottiId;
+import it.paoloadesso.gestionetavoli.enums.StatoOrdine;
 import it.paoloadesso.gestionetavoli.enums.StatoPagato;
 import it.paoloadesso.gestionetavoli.repositories.OrdiniProdottiRepository;
 import it.paoloadesso.gestionetavoli.repositories.OrdiniRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -20,21 +23,31 @@ public class PagamentoService {
 
     private final OrdiniProdottiRepository ordiniProdottiRepository;
     private final OrdiniRepository ordiniRepository;
+    private final OrdineService ordineService;
 
-    public PagamentoService(OrdiniProdottiRepository ordiniProdottiRepository, OrdiniRepository ordiniRepository) {
+
+    public PagamentoService(OrdiniProdottiRepository ordiniProdottiRepository, OrdiniRepository ordiniRepository, OrdineService ordineService) {
         this.ordiniProdottiRepository = ordiniProdottiRepository;
         this.ordiniRepository = ordiniRepository;
+        this.ordineService = ordineService;
     }
 
 
     public void pagaProdottoInOrdine(Long idOrdine, Long idProdotto) {
-        OrdiniProdottiId chiave = new OrdiniProdottiId(idOrdine,idProdotto);
+        OrdiniProdottiId chiave = new OrdiniProdottiId(idOrdine, idProdotto);
 
         OrdiniProdottiEntity prodottoOrdine = ordiniProdottiRepository.findById(chiave)
-                .orElseThrow(() -> new RuntimeException("Prodotto non trovato nell'ordine."));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "PRODOTTO_NON_TROVATO_IN_ORDINE: Prodotto con ID " + idProdotto +
+                                " non trovato nell'ordine " + idOrdine
+                ));
 
-        if(prodottoOrdine.getStatoPagato() == StatoPagato.PAGATO){
-            throw new RuntimeException("Prodotto già pagato.");
+        if (prodottoOrdine.getStatoPagato() == StatoPagato.PAGATO) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "PRODOTTO_GIA_PAGATO: Il prodotto è già stato pagato"
+            );
         }
 
         prodottoOrdine.setStatoPagato(StatoPagato.PAGATO);
@@ -42,49 +55,65 @@ public class PagamentoService {
         ordiniProdottiRepository.save(prodottoOrdine);
     }
 
-    public boolean isOrdineCompletamentePagato(Long idOrdine) {
-        // Conto prodotti totali
-        Integer prodottiTotali = ordiniProdottiRepository.countByOrdineIdOrdine(idOrdine);
+    @Transactional
+    public PagamentoRisultatoDto pagaTuttoEChiudiSeRichiesto(Long idOrdine, boolean chiudiOrdine) {
+        // Prima paga
+        PagamentoRisultatoDto risultato = pagaTuttoOrdine(idOrdine);
 
-        // Conto prodotti pagati
-        Integer prodottiPagati = ordiniProdottiRepository.countByOrdineIdOrdineAndStatoPagato(idOrdine, StatoPagato.PAGATO);
-
-        if (prodottiTotali == null || prodottiPagati == null) {
-            return false;
+        // Se richiesto, chiudi ordine
+        if (chiudiOrdine) {
+            ordineService.chiudiOrdine(idOrdine);
+            risultato.setStatoOrdine(StatoOrdine.CHIUSO);
         }
-        return prodottiTotali.equals(prodottiPagati);
+
+        return risultato;
     }
+
+
 
     @Transactional
     public PagamentoRisultatoDto pagaTuttoOrdine(Long idOrdine) {
 
-        // Verifica ordine
+        // Verifico ordine
         OrdiniEntity ordine = ordiniRepository.findByIdOrdine(idOrdine);
         if (ordine == null) {
-            throw new RuntimeException("Ordine inesistente.");
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "ORDINE_NON_TROVATO: Ordine con ID " + idOrdine + " non trovato"
+            );
         }
 
-        // Trova prodotti non pagati
+        // Trovo prodotti non pagati
         List<OrdiniProdottiEntity> prodottiNonPagati = ordiniProdottiRepository
                 .findByOrdineIdOrdineAndStatoPagato(idOrdine, StatoPagato.NON_PAGATO);
 
         if (prodottiNonPagati.isEmpty()) {
-            throw new RuntimeException("Nessun prodotto da pagare.");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "NESSUN_PRODOTTO_DA_PAGARE: Nessun prodotto da pagare per l'ordine " + idOrdine
+            );
         }
 
-        // Paga tutto e salva
+        // Pago tutto e salva
         prodottiNonPagati.forEach(prodotto -> {
             prodotto.setStatoPagato(StatoPagato.PAGATO);
         });
 
         ordiniProdottiRepository.saveAll(prodottiNonPagati);
 
+        // Conto il totale dei pezzi pagati
+        int totalePezziPagati = prodottiNonPagati.stream()
+                .mapToInt(OrdiniProdottiEntity::getQuantitaProdotto)
+                .sum();
+
         // Risultato
         return new PagamentoRisultatoDto(
                 idOrdine,
                 prodottiNonPagati.size(),
+                totalePezziPagati,
                 calcolaTotale(prodottiNonPagati),
-                LocalDateTime.now()
+                LocalDateTime.now(),
+                ordine.getStatoOrdine()
         );
     }
 
@@ -105,13 +134,20 @@ public class PagamentoService {
     }
 
     public void annullaPagamentoProdottoInOrdine(Long idOrdine, Long idProdotto) {
-        OrdiniProdottiId chiave = new OrdiniProdottiId(idOrdine,idProdotto);
+        OrdiniProdottiId chiave = new OrdiniProdottiId(idOrdine, idProdotto);
 
         OrdiniProdottiEntity prodottoOrdine = ordiniProdottiRepository.findById(chiave)
-                .orElseThrow(() -> new RuntimeException("Prodotto non trovato nell'ordine."));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "PRODOTTO_NON_TROVATO_IN_ORDINE: Prodotto con ID " + idProdotto +
+                                " non trovato nell'ordine " + idOrdine
+                ));
 
-        if(prodottoOrdine.getStatoPagato() == StatoPagato.NON_PAGATO){
-            throw new RuntimeException("Il prodotto risulta ancora da pagare.");
+        if (prodottoOrdine.getStatoPagato() == StatoPagato.NON_PAGATO) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "PRODOTTO_NON_PAGATO: Il prodotto non è stato ancora pagato"
+            );
         }
 
         prodottoOrdine.setStatoPagato(StatoPagato.NON_PAGATO);
@@ -125,7 +161,10 @@ public class PagamentoService {
         // Verifica ordine
         OrdiniEntity ordine = ordiniRepository.findByIdOrdine(idOrdine);
         if (ordine == null) {
-            throw new RuntimeException("Ordine inesistente.");
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND,
+                    "ORDINE_NON_TROVATO: Ordine con ID " + idOrdine + " non trovato"
+            );
         }
 
         // Trova prodotti pagati
@@ -133,7 +172,10 @@ public class PagamentoService {
                 .findByOrdineIdOrdineAndStatoPagato(idOrdine, StatoPagato.PAGATO);
 
         if (prodottiPagati.isEmpty()) {
-            throw new RuntimeException("Nessun prodotto risulta pagato.");
+            throw new ResponseStatusException(
+                    HttpStatus.UNPROCESSABLE_ENTITY,
+                    "NESSUN_PRODOTTO_PAGATO: Nessun prodotto pagato da annullare per questo ordine con ID " + idOrdine
+            );
         }
 
         // Annulla tutti i pagamenti e salva
@@ -143,10 +185,16 @@ public class PagamentoService {
 
         ordiniProdottiRepository.saveAll(prodottiPagati);
 
+        // Conto il totale dei pezzi pagati
+        int totalePezziNonPagati = prodottiPagati.stream()
+                .mapToInt(OrdiniProdottiEntity::getQuantitaProdotto)
+                .sum();
+
         // Risultato
         return new AnnullaPagamentoRisultatoDto(
                 idOrdine,
                 prodottiPagati.size(),
+                totalePezziNonPagati,
                 calcolaTotale(prodottiPagati),
                 LocalDateTime.now()
         );

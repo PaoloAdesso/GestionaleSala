@@ -25,6 +25,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponseDTO> handleRuntimeException(RuntimeException e) {
         ErrorResponseDTO error = new ErrorResponseDTO(
                 e.getMessage(),
+                null,
                 "ERRORE_BUSINESS"
         );
         return ResponseEntity.badRequest().body(error);
@@ -35,11 +36,19 @@ public class GlobalExceptionHandler {
      * Per esempio: throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tavolo non trovato")
      */
     @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<ErrorResponseDTO> handleBusinessErrors(ResponseStatusException ex) {
-        ErrorResponseDTO error = new ErrorResponseDTO(
-                ex.getReason(), // Il messaggio d'errore che ho scritto nel Service
-                "ERRORE_BUSINESS"
-        );
+    public ResponseEntity<ErrorResponseDTO> handleResponseStatus(ResponseStatusException ex) {
+        String codiceErroreNumerico = ex.getStatusCode().toString();
+        String messaggio = ex.getReason();
+        String codiceErrore = "ERRORE_BUSINESS";
+
+        // Estrai il codice dal messaggio se presente
+        if (messaggio != null && messaggio.contains(":")) {
+            String[] parts = messaggio.split(":", 2);
+            codiceErrore = parts[0].trim();
+            messaggio = parts[1].trim();
+        }
+
+        ErrorResponseDTO error = new ErrorResponseDTO(messaggio, codiceErroreNumerico ,codiceErrore);
         return new ResponseEntity<>(error, ex.getStatusCode());
     }
 

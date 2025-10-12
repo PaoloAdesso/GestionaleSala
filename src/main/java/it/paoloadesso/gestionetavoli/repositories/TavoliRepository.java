@@ -12,5 +12,5 @@ public interface TavoliRepository extends JpaRepository<TavoliEntity, Long> {
 
     boolean existsByNumeroNomeTavoloIgnoreCase(String numeroNomeTavolo);
 
-    List<TavoliEntity> findByStatoTavolo (StatoTavolo statoTavolo);
+    List<TavoliEntity> findByStatoTavolo(StatoTavolo statoTavolo);
 }

@@ -1,19 +1,25 @@
 package it.paoloadesso.gestionetavoli.dto;
 
+import it.paoloadesso.gestionetavoli.enums.StatoOrdine;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public class PagamentoRisultatoDto {
     private Long idOrdine;
-    private int prodottiPagati;
+    private int quantitaProdottiPagati;
+    private int totalePezziPagati;
     private BigDecimal totalePagato;
     private LocalDateTime timestampPagamento;
+    private StatoOrdine statoOrdine;
 
-    public PagamentoRisultatoDto(Long idOrdine, int prodottiPagati, BigDecimal totalePagato, LocalDateTime timestampPagamento) {
+    public PagamentoRisultatoDto(Long idOrdine, int quantitaProdottiPagati, int totalePezziPagati, BigDecimal totalePagato, LocalDateTime timestampPagamento, StatoOrdine statoOrdine) {
         this.idOrdine = idOrdine;
-        this.prodottiPagati = prodottiPagati;
+        this.quantitaProdottiPagati = quantitaProdottiPagati;
+        this.totalePezziPagati = totalePezziPagati;
         this.totalePagato = totalePagato;
         this.timestampPagamento = timestampPagamento;
+        this.statoOrdine = statoOrdine;
     }
 
     public PagamentoRisultatoDto() {
@@ -27,12 +33,20 @@ public class PagamentoRisultatoDto {
         this.idOrdine = idOrdine;
     }
 
-    public int getProdottiPagati() {
-        return prodottiPagati;
+    public int getQuantitaProdottiPagati() {
+        return quantitaProdottiPagati;
     }
 
-    public void setProdottiPagati(int prodottiPagati) {
-        this.prodottiPagati = prodottiPagati;
+    public void setQuantitaProdottiPagati(int quantitaProdottiPagati) {
+        this.quantitaProdottiPagati = quantitaProdottiPagati;
+    }
+
+    public int getTotalePezziPagati() {
+        return totalePezziPagati;
+    }
+
+    public void setTotalePezziPagati(int totalePezziPagati) {
+        this.totalePezziPagati = totalePezziPagati;
     }
 
     public BigDecimal getTotalePagato() {
@@ -45,6 +59,14 @@ public class PagamentoRisultatoDto {
 
     public LocalDateTime getTimestampPagamento() {
         return timestampPagamento;
+    }
+
+    public StatoOrdine getStatoOrdine() {
+        return statoOrdine;
+    }
+
+    public void setStatoOrdine(StatoOrdine statoOrdine) {
+        this.statoOrdine = statoOrdine;
     }
 
     public void setTimestampPagamento(LocalDateTime timestampPagamento) {
