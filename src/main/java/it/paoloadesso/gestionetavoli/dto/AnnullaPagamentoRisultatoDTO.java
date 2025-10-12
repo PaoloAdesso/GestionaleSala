@@ -3,17 +3,17 @@ package it.paoloadesso.gestionetavoli.dto;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-public class AnnullaPagamentoRisultatoDto {
+public class AnnullaPagamentoRisultatoDTO {
     private Long idOrdine;
     private int quantitaProdottiNonPagati;
     private int totalePezziNonPagati;
     private BigDecimal totalePagamentiAnnullati;
     private LocalDateTime timestampAnnullamentoPagamento;
 
-    public AnnullaPagamentoRisultatoDto() {
+    public AnnullaPagamentoRisultatoDTO() {
     }
 
-    public AnnullaPagamentoRisultatoDto(Long idOrdine, int quantitaProdottiNonPagati, int totalePezziNonPagati, BigDecimal totalePagamentiAnnullati, LocalDateTime timestampAnnullamentoPagamento) {
+    public AnnullaPagamentoRisultatoDTO(Long idOrdine, int quantitaProdottiNonPagati, int totalePezziNonPagati, BigDecimal totalePagamentiAnnullati, LocalDateTime timestampAnnullamentoPagamento) {
         this.idOrdine = idOrdine;
         this.quantitaProdottiNonPagati = quantitaProdottiNonPagati;
         this.totalePezziNonPagati = totalePezziNonPagati;

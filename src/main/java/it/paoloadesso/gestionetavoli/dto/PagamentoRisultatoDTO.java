@@ -5,7 +5,7 @@ import it.paoloadesso.gestionetavoli.enums.StatoOrdine;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-public class PagamentoRisultatoDto {
+public class PagamentoRisultatoDTO {
     private Long idOrdine;
     private int quantitaProdottiPagati;
     private int totalePezziPagati;
@@ -13,7 +13,7 @@ public class PagamentoRisultatoDto {
     private LocalDateTime timestampPagamento;
     private StatoOrdine statoOrdine;
 
-    public PagamentoRisultatoDto(Long idOrdine, int quantitaProdottiPagati, int totalePezziPagati, BigDecimal totalePagato, LocalDateTime timestampPagamento, StatoOrdine statoOrdine) {
+    public PagamentoRisultatoDTO(Long idOrdine, int quantitaProdottiPagati, int totalePezziPagati, BigDecimal totalePagato, LocalDateTime timestampPagamento, StatoOrdine statoOrdine) {
         this.idOrdine = idOrdine;
         this.quantitaProdottiPagati = quantitaProdottiPagati;
         this.totalePezziPagati = totalePezziPagati;
@@ -22,7 +22,7 @@ public class PagamentoRisultatoDto {
         this.statoOrdine = statoOrdine;
     }
 
-    public PagamentoRisultatoDto() {
+    public PagamentoRisultatoDTO() {
     }
 
     public Long getIdOrdine() {

@@ -1,7 +1,7 @@
 package it.paoloadesso.gestionetavoli.services;
 
-import it.paoloadesso.gestionetavoli.dto.AnnullaPagamentoRisultatoDto;
-import it.paoloadesso.gestionetavoli.dto.PagamentoRisultatoDto;
+import it.paoloadesso.gestionetavoli.dto.AnnullaPagamentoRisultatoDTO;
+import it.paoloadesso.gestionetavoli.dto.PagamentoRisultatoDTO;
 import it.paoloadesso.gestionetavoli.entities.OrdiniEntity;
 import it.paoloadesso.gestionetavoli.entities.OrdiniProdottiEntity;
 import it.paoloadesso.gestionetavoli.entities.keys.OrdiniProdottiId;
@@ -34,8 +34,10 @@ public class PagamentoService {
 
 
     public void pagaProdottoInOrdine(Long idOrdine, Long idProdotto) {
+        // Creo la chiave composita per trovare il prodotto in questo ordine specifico
         OrdiniProdottiId chiave = new OrdiniProdottiId(idOrdine, idProdotto);
 
+        // Cerco il prodotto nell'ordine, se non lo trovo lancio un errore
         OrdiniProdottiEntity prodottoOrdine = ordiniProdottiRepository.findById(chiave)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
@@ -43,24 +45,24 @@ public class PagamentoService {
                                 " non trovato nell'ordine " + idOrdine
                 ));
 
+        // Controllo che il prodotto non sia già stato pagato
         if (prodottoOrdine.getStatoPagato() == StatoPagato.PAGATO) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
                     "PRODOTTO_GIA_PAGATO: Il prodotto è già stato pagato"
             );
         }
-
+        // Imposto il prodotto come pagato e salvo
         prodottoOrdine.setStatoPagato(StatoPagato.PAGATO);
-
         ordiniProdottiRepository.save(prodottoOrdine);
     }
 
     @Transactional
-    public PagamentoRisultatoDto pagaTuttoEChiudiSeRichiesto(Long idOrdine, boolean chiudiOrdine) {
-        // Prima paga
-        PagamentoRisultatoDto risultato = pagaTuttoOrdine(idOrdine);
+    public PagamentoRisultatoDTO pagaTuttoEChiudiSeRichiesto(Long idOrdine, boolean chiudiOrdine) {
+        // Prima pago tutti i prodotti dell'ordine
+        PagamentoRisultatoDTO risultato = pagaTuttoOrdine(idOrdine);
 
-        // Se richiesto, chiudi ordine
+        // Se l'utente ha richiesto di chiudere l'ordine, lo chiudo
         if (chiudiOrdine) {
             ordineService.chiudiOrdine(idOrdine);
             risultato.setStatoOrdine(StatoOrdine.CHIUSO);
@@ -69,12 +71,10 @@ public class PagamentoService {
         return risultato;
     }
 
-
-
     @Transactional
-    public PagamentoRisultatoDto pagaTuttoOrdine(Long idOrdine) {
+    public PagamentoRisultatoDTO pagaTuttoOrdine(Long idOrdine) {
 
-        // Verifico ordine
+        // Prima verifico che l'ordine esista
         OrdiniEntity ordine = ordiniRepository.findByIdOrdine(idOrdine);
         if (ordine == null) {
             throw new ResponseStatusException(
@@ -83,10 +83,11 @@ public class PagamentoService {
             );
         }
 
-        // Trovo prodotti non pagati
+        // Trovo tutti i prodotti di questo ordine che NON sono ancora stati pagati
         List<OrdiniProdottiEntity> prodottiNonPagati = ordiniProdottiRepository
                 .findByOrdineIdOrdineAndStatoPagato(idOrdine, StatoPagato.NON_PAGATO);
 
+        // Se non ci sono prodotti da pagare, lancio un errore
         if (prodottiNonPagati.isEmpty()) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -94,39 +95,48 @@ public class PagamentoService {
             );
         }
 
-        // Pago tutto e salva
+        // Imposto tutti i prodotti come pagati
         prodottiNonPagati.forEach(prodotto -> {
             prodotto.setStatoPagato(StatoPagato.PAGATO);
         });
 
+        // Salvo tutte le modifiche in una volta sola
         ordiniProdottiRepository.saveAll(prodottiNonPagati);
 
-        // Conto il totale dei pezzi pagati
+        // Calcolo il totale dei pezzi pagati (sommo tutte le quantità)
         int totalePezziPagati = prodottiNonPagati.stream()
                 .mapToInt(OrdiniProdottiEntity::getQuantitaProdotto)
                 .sum();
 
-        // Risultato
-        return new PagamentoRisultatoDto(
+        // Creo e restituisco il risultato con tutte le info del pagamento
+        return new PagamentoRisultatoDTO(
                 idOrdine,
-                prodottiNonPagati.size(),
-                totalePezziPagati,
-                calcolaTotale(prodottiNonPagati),
-                LocalDateTime.now(),
-                ordine.getStatoOrdine()
+                prodottiNonPagati.size(),            // Quanti tipi di prodotto diversi ho pagato
+                totalePezziPagati,                   // Quanti pezzi in totale ho pagato
+                calcolaTotale(prodottiNonPagati),    // Quanto ho speso in totale
+                LocalDateTime.now(),                 // Quando è avvenuto il pagamento
+                ordine.getStatoOrdine()              // Lo stato attuale dell'ordine
         );
     }
 
+    /**
+     * Metodo d'aiuto: calcola il totale da pagare moltiplicando prezzo × quantità per ogni prodotto
+     * e sommando tutti i subtotali.
+     */
     private BigDecimal calcolaTotale(List<OrdiniProdottiEntity> prodottiNonPagati) {
         BigDecimal totale = BigDecimal.ZERO;
 
         for (OrdiniProdottiEntity prodottoOrdine : prodottiNonPagati) {
+            // Prendo il prezzo del prodotto
             BigDecimal prezzoProdotto = prodottoOrdine.getProdotto().getPrezzo();
 
+            // Prendo la quantità ordinata
             Integer quantita = prodottoOrdine.getQuantitaProdotto();
 
+            // Calcolo il subtotale (prezzo × quantità)
             BigDecimal subtotale = prezzoProdotto.multiply(BigDecimal.valueOf(quantita));
 
+            // Aggiungo al totale
             totale = totale.add(subtotale);
         }
 
@@ -134,8 +144,10 @@ public class PagamentoService {
     }
 
     public void annullaPagamentoProdottoInOrdine(Long idOrdine, Long idProdotto) {
+        // Creo la chiave composita per trovare il prodotto in questo ordine
         OrdiniProdottiId chiave = new OrdiniProdottiId(idOrdine, idProdotto);
 
+        // Cerco il prodotto nell'ordine
         OrdiniProdottiEntity prodottoOrdine = ordiniProdottiRepository.findById(chiave)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND,
@@ -143,6 +155,7 @@ public class PagamentoService {
                                 " non trovato nell'ordine " + idOrdine
                 ));
 
+        // Controllo che il prodotto sia stato effettivamente pagato
         if (prodottoOrdine.getStatoPagato() == StatoPagato.NON_PAGATO) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -150,15 +163,15 @@ public class PagamentoService {
             );
         }
 
+        // Riporto il prodotto allo stato "non pagato" e salvo
         prodottoOrdine.setStatoPagato(StatoPagato.NON_PAGATO);
-
         ordiniProdottiRepository.save(prodottoOrdine);
     }
 
     @Transactional
-    public AnnullaPagamentoRisultatoDto annullaPagamentoTuttoOrdine(Long idOrdine) {
+    public AnnullaPagamentoRisultatoDTO annullaPagamentoTuttoOrdine(Long idOrdine) {
 
-        // Verifica ordine
+        // Verifico che l'ordine esista
         OrdiniEntity ordine = ordiniRepository.findByIdOrdine(idOrdine);
         if (ordine == null) {
             throw new ResponseStatusException(
@@ -167,10 +180,11 @@ public class PagamentoService {
             );
         }
 
-        // Trova prodotti pagati
+        // Trovo tutti i prodotti che erano stati pagati
         List<OrdiniProdottiEntity> prodottiPagati = ordiniProdottiRepository
                 .findByOrdineIdOrdineAndStatoPagato(idOrdine, StatoPagato.PAGATO);
 
+        // Se non ci sono prodotti pagati da annullare, lancio un errore
         if (prodottiPagati.isEmpty()) {
             throw new ResponseStatusException(
                     HttpStatus.UNPROCESSABLE_ENTITY,
@@ -178,20 +192,21 @@ public class PagamentoService {
             );
         }
 
-        // Annulla tutti i pagamenti e salva
+        // Rimetto tutti i prodotti allo stato "non pagato"
         prodottiPagati.forEach(prodotto -> {
             prodotto.setStatoPagato(StatoPagato.NON_PAGATO);
         });
 
+        // Salvo tutte le modifiche
         ordiniProdottiRepository.saveAll(prodottiPagati);
 
-        // Conto il totale dei pezzi pagati
+        // Calcolo quanti pezzi ho rimesso come "non pagati"
         int totalePezziNonPagati = prodottiPagati.stream()
                 .mapToInt(OrdiniProdottiEntity::getQuantitaProdotto)
                 .sum();
 
-        // Risultato
-        return new AnnullaPagamentoRisultatoDto(
+        // Creo e restituisco il risultato dell'annullamento
+        return new AnnullaPagamentoRisultatoDTO(
                 idOrdine,
                 prodottiPagati.size(),
                 totalePezziNonPagati,
@@ -199,5 +214,4 @@ public class PagamentoService {
                 LocalDateTime.now()
         );
     }
-
 }

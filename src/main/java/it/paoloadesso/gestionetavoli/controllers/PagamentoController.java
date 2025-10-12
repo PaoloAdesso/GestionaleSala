@@ -1,8 +1,7 @@
 package it.paoloadesso.gestionetavoli.controllers;
 
-import it.paoloadesso.gestionetavoli.dto.AnnullaPagamentoRisultatoDto;
-import it.paoloadesso.gestionetavoli.dto.PagamentoRisultatoDto;
-import it.paoloadesso.gestionetavoli.services.OrdineService;
+import it.paoloadesso.gestionetavoli.dto.AnnullaPagamentoRisultatoDTO;
+import it.paoloadesso.gestionetavoli.dto.PagamentoRisultatoDTO;
 import it.paoloadesso.gestionetavoli.services.PagamentoService;
 import jakarta.validation.constraints.Positive;
 import org.springframework.http.ResponseEntity;
@@ -39,7 +38,7 @@ public class PagamentoController {
     }
 
     @PostMapping("/ordini/{idOrdine}")
-    public ResponseEntity<PagamentoRisultatoDto> pagaTutto(
+    public ResponseEntity<PagamentoRisultatoDTO> pagaTutto(
             @PathVariable @Positive Long idOrdine,
             @RequestParam(defaultValue = "false") boolean chiudiOrdine) {
 
@@ -49,10 +48,10 @@ public class PagamentoController {
     }
 
     @PostMapping("/ordini/{idOrdine}/annulla")
-    public ResponseEntity<AnnullaPagamentoRisultatoDto> annullaTutto(
+    public ResponseEntity<AnnullaPagamentoRisultatoDTO> annullaTutto(
             @PathVariable @Positive Long idOrdine) {
 
-        AnnullaPagamentoRisultatoDto risultato = pagamentoService.annullaPagamentoTuttoOrdine(idOrdine);
+        AnnullaPagamentoRisultatoDTO risultato = pagamentoService.annullaPagamentoTuttoOrdine(idOrdine);
         return ResponseEntity.ok(risultato);
     }
 }

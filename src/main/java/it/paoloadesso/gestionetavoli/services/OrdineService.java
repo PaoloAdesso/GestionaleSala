@@ -1,12 +1,15 @@
 package it.paoloadesso.gestionetavoli.services;
 
+import it.paoloadesso.gestionetavoli.dto.OrdineMinimalDTO;
 import it.paoloadesso.gestionetavoli.dto.StatoOrdineETavoloResponseDTO;
+import it.paoloadesso.gestionetavoli.dto.TavoloConOrdiniChiusiDTO;
 import it.paoloadesso.gestionetavoli.entities.OrdiniEntity;
 import it.paoloadesso.gestionetavoli.entities.OrdiniProdottiEntity;
 import it.paoloadesso.gestionetavoli.entities.TavoliEntity;
 import it.paoloadesso.gestionetavoli.enums.StatoOrdine;
 import it.paoloadesso.gestionetavoli.enums.StatoPagato;
 import it.paoloadesso.gestionetavoli.enums.StatoTavolo;
+import it.paoloadesso.gestionetavoli.mapper.OrdiniMapper;
 import it.paoloadesso.gestionetavoli.repositories.OrdiniProdottiRepository;
 import it.paoloadesso.gestionetavoli.repositories.OrdiniRepository;
 import it.paoloadesso.gestionetavoli.repositories.TavoliRepository;
@@ -16,7 +19,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class OrdineService {
@@ -24,12 +30,14 @@ public class OrdineService {
     private final OrdiniRepository ordiniRepository;
     private final OrdiniProdottiRepository ordiniProdottiRepository;
     private final TavoliRepository tavoliRepository;
+    private final OrdiniMapper ordiniMapper;
 
     public OrdineService(OrdiniRepository ordiniRepository, OrdiniProdottiRepository ordiniProdottiRepository,
-                         TavoliRepository tavoliRepository) {
+                         TavoliRepository tavoliRepository, OrdiniMapper ordiniMapper) {
         this.ordiniRepository = ordiniRepository;
         this.ordiniProdottiRepository = ordiniProdottiRepository;
         this.tavoliRepository = tavoliRepository;
+        this.ordiniMapper = ordiniMapper;
     }
 
     @Transactional
@@ -92,4 +100,68 @@ public class OrdineService {
                 ordine.getTavolo().getStatoTavolo()
         );
     }
+
+
+    public List<TavoloConOrdiniChiusiDTO> getOrdiniChiusi() {
+        // Carica tutti gli ordini chiusi
+        List<OrdiniEntity> ordiniChiusi = ordiniRepository.findByStatoOrdine(StatoOrdine.CHIUSO);
+
+        // Raggruppa per tavolo
+        Map<Long, List<OrdiniEntity>> ordiniPerTavolo = ordiniChiusi.stream()
+                .collect(Collectors.groupingBy(ordine -> ordine.getTavolo().getId()));
+
+        // Converti in DTO
+        return ordiniPerTavolo.values().stream()
+                .map(ordiniEntities -> {
+                    TavoliEntity tavolo = ordiniEntities.getFirst().getTavolo();
+
+                    List<OrdineMinimalDTO> ordini = ordiniEntities.stream()
+                            .map(ordine -> new OrdineMinimalDTO(
+                                    ordine.getIdOrdine(),
+                                    ordine.getDataOrdine(),
+                                    ordine.getStatoOrdine()
+                            ))
+                            .collect(Collectors.toList());
+
+                    return new TavoloConOrdiniChiusiDTO(
+                            tavolo.getId(),
+                            tavolo.getNumeroNomeTavolo(),
+                            tavolo.getStatoTavolo(),
+                            ordini
+                    );
+                })
+                .collect(Collectors.toList());
+    }
+
+    public List<TavoloConOrdiniChiusiDTO> getOrdiniChiusiDiOggi() {
+        // Carica tutti gli ordini chiusi
+        List<OrdiniEntity> ordiniChiusiDiOggi = ordiniRepository.findByStatoOrdineAndDataOrdine(StatoOrdine.CHIUSO, LocalDate.now());
+
+        // Raggruppa per tavolo
+        Map<Long, List<OrdiniEntity>> ordiniPerTavolo = ordiniChiusiDiOggi.stream()
+                .collect(Collectors.groupingBy(ordine -> ordine.getTavolo().getId()));
+
+        // Converti in DTO
+        return ordiniPerTavolo.values().stream()
+                .map(ordiniEntities -> {
+                    TavoliEntity tavolo = ordiniEntities.getFirst().getTavolo();
+
+                    List<OrdineMinimalDTO> ordini = ordiniEntities.stream()
+                            .map(ordine -> new OrdineMinimalDTO(
+                                    ordine.getIdOrdine(),
+                                    ordine.getDataOrdine(),
+                                    ordine.getStatoOrdine()
+                            ))
+                            .collect(Collectors.toList());
+
+                    return new TavoloConOrdiniChiusiDTO(
+                            tavolo.getId(),
+                            tavolo.getNumeroNomeTavolo(),
+                            tavolo.getStatoTavolo(),
+                            ordini
+                    );
+                })
+                .collect(Collectors.toList());
+    }
+
 }

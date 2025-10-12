@@ -18,8 +18,8 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     /**
-     * Cattura gli errori RuntimeException (inclusi quelli del tuo Service)
-     * Per esempio: throw new RuntimeException("Nessun prodotto da pagare")
+     * Cattura gli errori RuntimeException, inclusi quelli lanciati nei miei Service.
+     * Ad esempio: throw new RuntimeException("Nessun prodotto da pagare")
      */
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ErrorResponseDTO> handleRuntimeException(RuntimeException e) {
@@ -33,7 +33,7 @@ public class GlobalExceptionHandler {
 
     /**
      * Cattura gli errori che lancio io nei Service con ResponseStatusException.
-     * Per esempio: throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tavolo non trovato")
+     * Ad esempio: throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tavolo non trovato")
      */
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<ErrorResponseDTO> handleResponseStatus(ResponseStatusException ex) {
@@ -41,11 +41,12 @@ public class GlobalExceptionHandler {
         String messaggio = ex.getReason();
         String codiceErrore = "ERRORE_BUSINESS";
 
-        // Estrai il codice dal messaggio se presente
+        // Se il messaggio contiene ":" significa che ho messo un codice personalizzato
+        // Esempio: "ORDINE_NON_TROVATO: Ordine con ID 5 non trovato"
         if (messaggio != null && messaggio.contains(":")) {
             String[] parts = messaggio.split(":", 2);
-            codiceErrore = parts[0].trim();
-            messaggio = parts[1].trim();
+            codiceErrore = parts[0].trim();  // La parte prima dei ":"
+            messaggio = parts[1].trim();     // La parte dopo i ":"
         }
 
         ErrorResponseDTO error = new ErrorResponseDTO(messaggio, codiceErroreNumerico ,codiceErrore);
@@ -53,15 +54,15 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Cattura errori di validazione sui DTO (quando @Valid fallisce)
-     * Restituisce una mappa campo->errore invece di ErrorResponseDTO
-     * perché è più utile per il frontend sapere quale campo è sbagliato
+     * Cattura errori di validazione sui DTO, quando @Valid fallisce.
+     * Restituisce una mappa campo→errore invece di ErrorResponseDTO
+     * perché così il frontend sa esattamente quale campo è sbagliato.
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidationErrors(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
 
-        // Per ogni campo sbagliato nel DTO, metto campo->messaggio di errore
+        // Per ogni campo sbagliato nel DTO, metto: nomeCampo → messaggioErrore
         ex.getBindingResult().getFieldErrors().forEach(error ->
                 errors.put(error.getField(), error.getDefaultMessage()));
 
@@ -69,8 +70,8 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Cattura errori di validazione sui parametri URL
-     * Per esempio: @Positive Long idOrdine con valore negativo
+     * Cattura errori di validazione sui parametri URL.
+     * Ad esempio: @Positive Long idOrdine quando mando un valore negativo.
      */
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<ErrorResponseDTO> handleConstraintViolation(ConstraintViolationException ex) {
@@ -82,8 +83,8 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Cattura parametri mancanti nelle richieste
-     * Per esempio: GET /api/ordini senza parametro obbligatorio
+     * Cattura quando manca un parametro obbligatorio nelle richieste.
+     * Ad esempio: GET /api/ordini senza il parametro idTavolo che era obbligatorio.
      */
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public ResponseEntity<ErrorResponseDTO> handleMissingParameter(MissingServletRequestParameterException ex) {
@@ -97,8 +98,8 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Cattura errori di tipo sbagliato nei parametri
-     * Per esempio: /api/ordini/abc invece di /api/ordini/123
+     * Cattura quando il tipo del parametro è sbagliato.
+     * Ad esempio: /api/ordini/abc invece di /api/ordini/123 (testo invece di numero).
      */
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorResponseDTO> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
@@ -112,8 +113,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Cattura tutti gli errori che non ho previsto.
-     * È il "paracadute di sicurezza"
+     * Cattura tutti gli errori imprevisti che non ho gestito.
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDTO> handleGenericErrors(Exception ex) {
@@ -125,8 +125,8 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Metodo di aiuto: quando manca un parametro, decide che messaggio mostrare.
-     * Ho messo i messaggi specifici per i parametri che uso spesso.
+     * Metodo di aiuto: quando manca un parametro, questo metodo decide quale messaggio mostrare.
+     * Ho messo messaggi specifici per i parametri che uso più spesso.
      */
     private String getMissingParameterMessage(String parameterName) {
         return switch (parameterName) {
@@ -139,8 +139,8 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Metodo di aiuto: quando il tipo del parametro è sbagliato, decide che messaggio mostrare.
-     * Per esempio: se mando "abc" invece di un numero per idTavolo.
+     * Metodo di aiuto: quando il tipo del parametro è sbagliato, questo metodo decide quale messaggio mostrare.
+     * Ad esempio: se mando "abc" invece di un numero per idTavolo.
      */
     private String getTypeMismatchMessage(String parameterName) {
         return switch (parameterName) {
