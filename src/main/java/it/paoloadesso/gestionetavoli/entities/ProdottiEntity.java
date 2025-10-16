@@ -1,12 +1,17 @@
 package it.paoloadesso.gestionetavoli.entities;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 
 @Entity
 @Table(name = "prodotti")
+@SQLDelete(sql = "UPDATE prodotti SET deleted = true, deleted_at = NOW() WHERE id_prodotto = ?")
+@SQLRestriction("deleted = false")
 public class ProdottiEntity {
 
     @Id
@@ -24,11 +29,19 @@ public class ProdottiEntity {
     @Column(name = "prezzo", nullable = false, precision = 10, scale = 2)
     private BigDecimal prezzo;
 
-    public ProdottiEntity(Long id, String nome, String categoria, BigDecimal prezzo) {
+    @Column(name = "deleted", nullable = false)
+    private Boolean deleted = false;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    public ProdottiEntity(Long id, String nome, String categoria, BigDecimal prezzo, Boolean deleted, LocalDateTime deletedAt) {
         this.id = id;
         this.nome = nome;
         this.categoria = categoria;
         this.prezzo = prezzo;
+        this.deleted = deleted;
+        this.deletedAt = deletedAt;
     }
 
     public ProdottiEntity() {
@@ -64,5 +77,31 @@ public class ProdottiEntity {
 
     public void setPrezzo(BigDecimal prezzo) {
         this.prezzo = prezzo;
+    }
+
+    public Boolean getDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(Boolean deleted) {
+        this.deleted = deleted;
+    }
+
+    public LocalDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(LocalDateTime deletedAt) {
+        this.deletedAt = deletedAt;
+    }
+
+    // Callback per aggiornare l'oggetto in memoria
+    // Esegue il metodo prima che Hibernate chiami il delete, altrimenti deleted
+    // e deletedAt rimangono ai valori vecchi.
+    @PreRemove
+    protected void onSoftDelete() {
+        this.deleted = true;
+        this.deletedAt = LocalDateTime.now();
+        System.out.println("Soft delete prodotto «" + nome + "» con ID " + id);
     }
 }

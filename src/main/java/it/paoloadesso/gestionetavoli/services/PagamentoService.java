@@ -57,6 +57,13 @@ public class PagamentoService {
         ordiniProdottiRepository.save(prodottoOrdine);
     }
 
+    /**
+     * Questo metodo paga tutti i prodotti di un ordine e opzionalmente chiude l'ordine.
+     * Uso @Transactional perché faccio due operazioni che devono avere successo entrambe:
+     * 1. Pago tutti i prodotti
+     * 2. (Opzionale) Chiudo l'ordine
+     * Se una fallisce, annullo anche l'altra.
+     */
     @Transactional
     public PagamentoRisultatoDTO pagaTuttoEChiudiSeRichiesto(Long idOrdine, boolean chiudiOrdine) {
         // Prima pago tutti i prodotti dell'ordine
@@ -143,6 +150,11 @@ public class PagamentoService {
         return totale;
     }
 
+    /**
+     * Questo metodo annulla il pagamento di un singolo prodotto.
+     * Utile se ho marcato come pagato per errore e devo correggere.
+     * Riporto il prodotto allo stato "non pagato".
+     */
     public void annullaPagamentoProdottoInOrdine(Long idOrdine, Long idProdotto) {
         // Creo la chiave composita per trovare il prodotto in questo ordine
         OrdiniProdottiId chiave = new OrdiniProdottiId(idOrdine, idProdotto);

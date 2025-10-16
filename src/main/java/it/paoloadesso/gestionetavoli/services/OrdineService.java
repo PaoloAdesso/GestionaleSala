@@ -40,6 +40,12 @@ public class OrdineService {
         this.ordiniMapper = ordiniMapper;
     }
 
+    /**
+     * Questo metodo chiude un ordine cambiando il suo stato da APERTO a CHIUSO.
+     * Controllo prima che tutti i prodotti siano stati pagati, perché non posso
+     * chiudere un ordine se ci sono ancora cose da pagare.
+     * Uso @Transactional perché modifico il database.
+     */
     @Transactional
     public StatoOrdineETavoloResponseDTO chiudiOrdine(@Positive Long idOrdine) {
 
@@ -70,12 +76,13 @@ public class OrdineService {
                     "PRODOTTI_NON_PAGATI: I prodotti dell'ordine NON risultano tutti pagati"
             );
         }
+        // Cambio lo stato dell'ordine a CHIUSO e lo salvo nel db
         ordine.setStatoOrdine(StatoOrdine.CHIUSO);
         ordiniRepository.save(ordine);
 
-        // trovo il tavolo
+        // Trovo il tavolo
         TavoliEntity tavolo = ordine.getTavolo();
-        // verifico che non ci siano altri ordini aperti
+        // Verifico che non ci siano altri ordini aperti
         List<OrdiniEntity> altriOrdiniAperti = ordiniRepository
                 .findByTavoloIdAndStatoOrdineNot(tavolo.getId(), StatoOrdine.CHIUSO);
 

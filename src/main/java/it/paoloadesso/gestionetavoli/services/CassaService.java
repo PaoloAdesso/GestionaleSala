@@ -22,6 +22,13 @@ public class CassaService {
         this.ordiniProdottiRepository = ordiniProdottiRepository;
     }
 
+    /**
+     * Questo metodo restituisce tutti i tavoli che hanno ordini aperti con prodotti non pagati.
+     * È la vista principale della cassa: mostra quali tavoli devono ancora pagare.
+     *
+     * Logica: prendo tutti i prodotti non pagati, raggruppo per tavolo, e restituisco
+     * solo i tavoli che hanno almeno un prodotto non pagato in un ordine aperto.
+     */
     public List<TavoloApertoDTO> getTavoliAperti() {
         // Prendo tutti gli ordini non chiusi
         List<OrdiniEntity> tavoliAperti = ordiniRepository.findByStatoOrdineNot(StatoOrdine.CHIUSO);

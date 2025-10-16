@@ -1,7 +1,6 @@
 package it.paoloadesso.gestionetavoli.repositories;
 
 import it.paoloadesso.gestionetavoli.entities.OrdiniEntity;
-import it.paoloadesso.gestionetavoli.entities.OrdiniProdottiEntity;
 import it.paoloadesso.gestionetavoli.enums.StatoOrdine;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
