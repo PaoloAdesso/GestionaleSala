@@ -1,6 +1,6 @@
 package it.paoloadesso.gestionetavoli.mapper;
 
-import it.paoloadesso.gestionetavoli.dto.CreaTavoliDTO;
+import it.paoloadesso.gestionetavoli.dto.CreaTavoliRequestDTO;
 import it.paoloadesso.gestionetavoli.dto.TavoliDTO;
 import it.paoloadesso.gestionetavoli.dto.TavoloApertoDTO;
 import it.paoloadesso.gestionetavoli.entities.TavoliEntity;
@@ -16,10 +16,10 @@ public interface TavoliMapper {
     @Mapping(target = "id", ignore = true)
     TavoliEntity dtoToEntity(TavoloApertoDTO tavoloApertoDTO);
 
-    CreaTavoliDTO createTavoliEntityToDto(TavoliEntity tavoliEntity);
+    CreaTavoliRequestDTO createTavoliEntityToDto(TavoliEntity tavoliEntity);
 
     @Mapping(target = "id", ignore = true)
-    TavoliEntity createTavoliDtoToEntity(CreaTavoliDTO creaTavoliDto);
+    TavoliEntity createTavoliDtoToEntity(CreaTavoliRequestDTO creaTavoliRequestDto);
 
     @Mapping(target = "id", ignore = true)
     TavoliEntity dtoToEntity(TavoliDTO aggiornaTavoliRequestDto);

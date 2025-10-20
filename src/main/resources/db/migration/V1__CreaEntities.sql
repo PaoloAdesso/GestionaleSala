@@ -30,7 +30,7 @@ CREATE TABLE ordini (
                           id_ordine BIGINT PRIMARY KEY DEFAULT nextval('ordini_id_seq'),
                           id_tavolo BIGINT NOT NULL,
                           data_ordine DATE NOT NULL,
-                          stato_ordine VARCHAR(255) NOT NULL default 'IN ATTESA',
+                          stato_ordine VARCHAR(255) NOT NULL default 'IN_ATTESA',
                           CONSTRAINT fk_tavoli FOREIGN KEY (id_tavolo) REFERENCES tavoli(id_tavolo) ON DELETE CASCADE
 );
 -- =========================
@@ -40,7 +40,7 @@ CREATE TABLE ordini_prodotti (
                                            id_ordine BIGINT NOT NULL,
                                            id_prodotto BIGINT NOT NULL,
                                            quantita_prodotto BIGINT NOT NULL,
-                                           stato_pagato VARCHAR(255) NOT NULL DEFAULT 'NON PAGATO',
+                                           stato_pagato VARCHAR(255) NOT NULL DEFAULT 'NON_PAGATO',
                                            PRIMARY KEY (id_ordine, id_prodotto),
                                            CONSTRAINT fk_ordini FOREIGN KEY (id_ordine) REFERENCES ordini(id_ordine) ON DELETE CASCADE,
                                            CONSTRAINT fk_prodotti FOREIGN KEY (id_prodotto) REFERENCES prodotti(id_prodotto) ON DELETE CASCADE

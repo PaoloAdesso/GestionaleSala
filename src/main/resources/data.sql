@@ -86,11 +86,11 @@ INSERT INTO prodotti (nome_prodotto, categoria_prodotto, prezzo, deleted, delete
 -- =========================
 INSERT INTO ordini (id_tavolo, data_ordine, stato_ordine) VALUES
 -- Ordini di oggi
-(3, CURRENT_DATE, 'IN ATTESA'),
-(5, CURRENT_DATE, 'IN PREPARAZIONE'),
+(3, CURRENT_DATE, 'IN_ATTESA'),
+(5, CURRENT_DATE, 'IN_PREPARAZIONE'),
 (8, CURRENT_DATE, 'SERVITO'),
-(11, CURRENT_DATE, 'IN ATTESA'),
-(15, CURRENT_DATE, 'IN PREPARAZIONE'),
+(11, CURRENT_DATE, 'IN_ATTESA'),
+(15, CURRENT_DATE, 'IN_PREPARAZIONE'),
 (18, CURRENT_DATE, 'SERVITO'),
 
 -- Ordini chiusi di oggi
@@ -114,35 +114,35 @@ INSERT INTO ordini (id_tavolo, data_ordine, stato_ordine) VALUES
 
 -- Ordine 1 (Tavolo 3 - IN ATTESA)
 INSERT INTO ordini_prodotti (id_ordine, id_prodotto, quantita_prodotto, stato_pagato) VALUES
-                                                                                          (1, 1, 2, 'NON PAGATO'),  -- 2x Pizza Margherita
-                                                                                          (1, 21, 2, 'NON PAGATO'), -- 2x Coca Cola
-                                                                                          (1, 27, 1, 'NON PAGATO'); -- 1x Caffè
+                                                                                          (1, 1, 2, 'NON_PAGATO'),  -- 2x Pizza Margherita
+                                                                                          (1, 21, 2, 'NON_PAGATO'), -- 2x Coca Cola
+                                                                                          (1, 27, 1, 'NON_PAGATO'); -- 1x Caffè
 
 -- Ordine 2 (Tavolo 5 - IN PREPARAZIONE)
 INSERT INTO ordini_prodotti (id_ordine, id_prodotto, quantita_prodotto, stato_pagato) VALUES
-                                                                                          (2, 3, 1, 'NON PAGATO'),  -- 1x Pizza Capricciosa
-                                                                                          (2, 9, 1, 'NON PAGATO'),  -- 1x Spaghetti Carbonara
-                                                                                          (2, 25, 1, 'NON PAGATO'), -- 1x Vino Rosso
-                                                                                          (2, 29, 2, 'NON PAGATO'); -- 2x Tiramisù
+                                                                                          (2, 3, 1, 'NON_PAGATO'),  -- 1x Pizza Capricciosa
+                                                                                          (2, 9, 1, 'NON_PAGATO'),  -- 1x Spaghetti Carbonara
+                                                                                          (2, 25, 1, 'NON_PAGATO'), -- 1x Vino Rosso
+                                                                                          (2, 29, 2, 'NON_PAGATO'); -- 2x Tiramisù
 
 -- Ordine 3 (Tavolo 8 - SERVITO)
 INSERT INTO ordini_prodotti (id_ordine, id_prodotto, quantita_prodotto, stato_pagato) VALUES
                                                                                           (3, 4, 2, 'PAGATO'),      -- 2x Pizza 4 Formaggi
                                                                                           (3, 24, 1, 'PAGATO'),     -- 1x Birra
-                                                                                          (3, 22, 2, 'NON PAGATO'); -- 2x Acqua Naturale
+                                                                                          (3, 22, 2, 'NON_PAGATO'); -- 2x Acqua Naturale
 
 -- Ordine 4 (Tavolo 11 - IN ATTESA)
 INSERT INTO ordini_prodotti (id_ordine, id_prodotto, quantita_prodotto, stato_pagato) VALUES
-                                                                                          (4, 17, 1, 'NON PAGATO'), -- 1x Bistecca Fiorentina
-                                                                                          (4, 11, 1, 'NON PAGATO'), -- 1x Lasagne
-                                                                                          (4, 26, 1, 'NON PAGATO'), -- 1x Vino Bianco
-                                                                                          (4, 22, 1, 'NON PAGATO'); -- 1x Acqua
+                                                                                          (4, 17, 1, 'NON_PAGATO'), -- 1x Bistecca Fiorentina
+                                                                                          (4, 11, 1, 'NON_PAGATO'), -- 1x Lasagne
+                                                                                          (4, 26, 1, 'NON_PAGATO'), -- 1x Vino Bianco
+                                                                                          (4, 22, 1, 'NON_PAGATO'); -- 1x Acqua
 
 -- Ordine 5 (Tavolo 15 - IN PREPARAZIONE)
 INSERT INTO ordini_prodotti (id_ordine, id_prodotto, quantita_prodotto, stato_pagato) VALUES
-                                                                                          (5, 2, 3, 'NON PAGATO'),  -- 3x Pizza Diavola
-                                                                                          (5, 21, 3, 'NON PAGATO'), -- 3x Coca Cola
-                                                                                          (5, 31, 3, 'NON PAGATO'); -- 3x Gelato
+                                                                                          (5, 2, 3, 'NON_PAGATO'),  -- 3x Pizza Diavola
+                                                                                          (5, 21, 3, 'NON_PAGATO'), -- 3x Coca Cola
+                                                                                          (5, 31, 3, 'NON_PAGATO'); -- 3x Gelato
 
 -- Ordine 6 (Tavolo 18 - SERVITO)
 INSERT INTO ordini_prodotti (id_ordine, id_prodotto, quantita_prodotto, stato_pagato) VALUES

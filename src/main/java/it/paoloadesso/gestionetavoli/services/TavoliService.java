@@ -1,6 +1,6 @@
 package it.paoloadesso.gestionetavoli.services;
 
-import it.paoloadesso.gestionetavoli.dto.CreaTavoliDTO;
+import it.paoloadesso.gestionetavoli.dto.CreaTavoliRequestDTO;
 import it.paoloadesso.gestionetavoli.dto.TavoliDTO;
 import it.paoloadesso.gestionetavoli.entities.TavoliEntity;
 import it.paoloadesso.gestionetavoli.enums.StatoTavolo;
@@ -30,7 +30,7 @@ public class TavoliService {
     }
 
     @Transactional
-    public TavoliDTO creaTavolo(CreaTavoliDTO dto) {
+    public TavoliDTO creaTavolo(CreaTavoliRequestDTO dto) {
         if (tavoliRepository.existsByNumeroNomeTavoloIgnoreCase(dto.getNumeroNomeTavolo())) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,

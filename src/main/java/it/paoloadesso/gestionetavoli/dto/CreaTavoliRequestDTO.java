@@ -2,16 +2,16 @@ package it.paoloadesso.gestionetavoli.dto;
 
 import jakarta.validation.constraints.NotBlank;
 
-public class CreaTavoliDTO {
+public class CreaTavoliRequestDTO {
 
     @NotBlank
     private String numeroNomeTavolo;
 
-    public CreaTavoliDTO(String numeroNomeTavolo) {
+    public CreaTavoliRequestDTO(String numeroNomeTavolo) {
         this.numeroNomeTavolo = numeroNomeTavolo;
     }
 
-    public CreaTavoliDTO() {
+    public CreaTavoliRequestDTO() {
 
     }
 

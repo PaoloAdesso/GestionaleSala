@@ -14,13 +14,12 @@ public class SwaggerConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                        .title("Gestione Tavoli API")
+                        .title("Gestione Sala API")
                         .version("1.0")
-                        .description("API per la gestione dei tavoli del bar/ristorante - Cassa")
+                        .description("API per la gestione dell'intera sala del bar/ristorante - Cassa")
                         .contact(new Contact()
                                 .name("Paolo Adesso")
-                                .email("paolo@ristorante.it")
-                                .url("https://www.ristorante.now"))
+                                .email("paoloadesso@outlook.it"))
                         .license(new License()
                                 .name("Apache 2.0")
                                 .url("https://www.apache.org/licenses/LICENSE-2.0")));

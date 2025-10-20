@@ -1,8 +1,11 @@
 package it.paoloadesso.gestionetavoli.repositories;
 
+import it.paoloadesso.gestionetavoli.dto.OrdiniDTO;
 import it.paoloadesso.gestionetavoli.entities.OrdiniEntity;
 import it.paoloadesso.gestionetavoli.enums.StatoOrdine;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
@@ -30,4 +33,9 @@ public interface OrdiniRepository extends JpaRepository<OrdiniEntity, Long> {
     List<OrdiniEntity> findByTavoloIdAndDataOrdineAndStatoOrdineNot(Long idTavolo, LocalDate data, StatoOrdine stato);
 
     OrdiniEntity findByIdOrdine(Long idOrdine);
+
+    @Query("SELECT new it.paoloadesso.gestionetavoli.dto.OrdiniDTO(" +
+            "o.idOrdine, o.tavolo.id, o.dataOrdine, o.statoOrdine) " +
+            "FROM OrdiniEntity o WHERE o.statoOrdine <> :stato")
+    List<OrdiniDTO> findOrdiniDtoByStatoOrdineNot(@Param("stato") StatoOrdine statoOrdine);
 }

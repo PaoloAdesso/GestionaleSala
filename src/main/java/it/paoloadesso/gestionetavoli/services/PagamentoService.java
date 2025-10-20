@@ -23,13 +23,13 @@ public class PagamentoService {
 
     private final OrdiniProdottiRepository ordiniProdottiRepository;
     private final OrdiniRepository ordiniRepository;
-    private final OrdineService ordineService;
+    private final OrdiniService ordiniService;
 
 
-    public PagamentoService(OrdiniProdottiRepository ordiniProdottiRepository, OrdiniRepository ordiniRepository, OrdineService ordineService) {
+    public PagamentoService(OrdiniProdottiRepository ordiniProdottiRepository, OrdiniRepository ordiniRepository, OrdiniService ordiniService) {
         this.ordiniProdottiRepository = ordiniProdottiRepository;
         this.ordiniRepository = ordiniRepository;
-        this.ordineService = ordineService;
+        this.ordiniService = ordiniService;
     }
 
 
@@ -71,7 +71,7 @@ public class PagamentoService {
 
         // Se l'utente ha richiesto di chiudere l'ordine, lo chiudo
         if (chiudiOrdine) {
-            ordineService.chiudiOrdine(idOrdine);
+            ordiniService.chiudiOrdine(idOrdine);
             risultato.setStatoOrdine(StatoOrdine.CHIUSO);
         }
 
