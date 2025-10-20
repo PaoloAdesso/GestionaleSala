@@ -1,5 +1,5 @@
 -- =========================
--- DATA.SQL - Dati Sample per Gestione Tavoli/Ordini
+-- DATA.SQL - Dati Sample per Gestionale Sala
 -- =========================
 
 -- =========================

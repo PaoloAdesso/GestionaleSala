@@ -9,10 +9,10 @@
         <relativePath/>
     </parent>
     <groupId>it.paoloadesso</groupId>
-    <artifactId>GestioneTavoli</artifactId>
+    <artifactId>GestionaleSala</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>GestioneTavoli</name>
-    <description>Sistema gestione tavoli e amministrazione ristorante</description>
+    <name>GestionaleSala</name>
+    <description>Gestionale per la sala del bar/ristorante</description>
 
     <properties>
         <java.version>21</java.version>
