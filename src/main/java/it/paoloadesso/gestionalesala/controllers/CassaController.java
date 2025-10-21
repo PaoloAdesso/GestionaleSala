@@ -75,10 +75,6 @@ public class CassaController {
         return ResponseEntity.noContent().build();
     }
 
-    /*
-        TODO: Imposta lo stato di tutti i tavoli "LIBERO",
-         magari schedulato, a fine turno lavorativo.
-     */
     @Operation(
             summary = "Libera tutti i tavoli manualmente",
             description = "Reimposta manualmente lo stato di tutti i tavoli a LIBERO. " +

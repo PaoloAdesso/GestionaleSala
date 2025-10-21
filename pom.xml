@@ -112,7 +112,7 @@
                 <artifactId>flyway-maven-plugin</artifactId>
                 <version>11.14.0</version>
                 <configuration>
-                    <url>jdbc:postgresql://localhost:5432/bar</url>
+                    <url>jdbc:postgresql://localhost:5432/progetto_ristorazione</url>
                     <user>postgres</user>
                     <password>admin</password>
                     <locations>

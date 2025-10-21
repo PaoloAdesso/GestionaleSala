@@ -15,9 +15,12 @@ import it.paoloadesso.gestionalesala.repositories.OrdiniRepository;
 import it.paoloadesso.gestionalesala.repositories.ProdottiRepository;
 import it.paoloadesso.gestionalesala.repositories.TavoliRepository;
 import it.paoloadesso.gestionalesala.utils.DataLavorativaUtil;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,10 +30,13 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 public class OrdiniService {
+
+    private static final Logger log = LoggerFactory.getLogger(OrdiniService.class);
 
     private final OrdiniRepository ordiniRepository;
     private final OrdiniProdottiRepository ordiniProdottiRepository;
@@ -40,6 +46,8 @@ public class OrdiniService {
     private final OrdiniMapper ordiniMapper;
 
     private final DataLavorativaUtil dataLavorativaUtil;
+
+
 
     public OrdiniService(OrdiniRepository ordiniRepository, OrdiniProdottiRepository ordiniProdottiRepository,
                          TavoliRepository tavoliRepository, ProdottiRepository prodottiRepository, OrdiniMapper ordiniMapper, DataLavorativaUtil dataLavorativaUtil) {
@@ -254,7 +262,6 @@ public class OrdiniService {
                 .collect(Collectors.toList());
     }
 
-
     public List<OrdiniDTO> getListaOrdiniApertiByTavolo(Long idTavolo) {
         // Prima controllo che il tavolo esista
         controlloSeIlTavoloEsiste(idTavolo);
@@ -424,6 +431,59 @@ public class OrdiniService {
         return creaRisultatoModifica(ordineAggiornato, prodottiAggiunti, prodottiRimossi, errori, requestDto);
     }
 
+    @Transactional
+    public void deleteOrdine(Long idOrdine) {
+        boolean esisteGiaCancellato = ordiniRepository.existsDeletedOrdine(idOrdine);
+
+        if (esisteGiaCancellato) {
+            throw new IllegalStateException("Ordine già cancellato: " + idOrdine);
+        }
+
+        OrdiniEntity ordine = ordiniRepository.findById(idOrdine)
+                .orElseThrow(() -> new EntityNotFoundException("Ordine non trovato: " + idOrdine));
+
+        ordiniRepository.delete(ordine);
+
+        log.info("Ordine {} cancellato (soft delete)", idOrdine);
+    }
+
+    public List<OrdiniDTO> getAllOrdiniEliminati() {
+        List<OrdiniEntity> entities = ordiniRepository.findAllOrdiniEliminati();
+        return entities.stream()
+                .map(ordiniMapper::ordiniEntityToDto)
+                .toList();
+    }
+
+    @Transactional
+    public OrdiniDTO ripristinaOrdine(Long idOrdine) {
+        log.debug("Tentativo ripristino ordine con ID: {}", idOrdine);
+
+        OrdiniEntity ordine = ordiniRepository.findDeletedOrdineById(idOrdine)
+                .orElseThrow(() -> new EntityNotFoundException("Ordine cancellato non trovato con ID: " + idOrdine));
+
+        TavoliEntity tavolo = ordine.getTavolo();
+        if (tavolo == null) {
+            throw new IllegalStateException("Ordine senza tavolo: impossibile ripristinare");
+        }
+
+//        if (Boolean.TRUE.equals(tavolo.getDeleted())) {
+//            throw new IllegalStateException("Il tavolo collegato è stato rimosso: ripristino non consentito");
+//        }
+
+        ordine.setDeleted(false);
+        ordine.setDeletedAt(null);
+        OrdiniEntity ordineRipristinato = ordiniRepository.save(ordine);
+
+        if (ordine.getStatoOrdine() != StatoOrdine.CHIUSO && tavolo.getStatoTavolo() != StatoTavolo.OCCUPATO) {
+            tavolo.setStatoTavolo(StatoTavolo.OCCUPATO);
+            tavoliRepository.save(tavolo);
+        }
+
+        log.info("Ordine {} ripristinato con successo", idOrdine);
+        return ordiniMapper.ordiniEntityToDto(ordineRipristinato);
+    }
+
+
     private void controlloSeIlTavoloEsiste(Long idTavolo) {
         if (idTavolo == null || !tavoliRepository.existsById(idTavolo)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tavolo non trovato");
@@ -575,18 +635,15 @@ public class OrdiniService {
         if (operazioneCompleta) {
             List<String> operazioni = new ArrayList<>();
 
-            // Tavolo cambiato
             if (requestDto.getNuovoIdTavolo() != null) {
                 operazioni.add("Tavolo cambiato");
             }
 
-            // Prodotti aggiunti
             if (prodottiAggiunti > 0) {
                 String msg = (prodottiAggiunti == 1) ? "1 prodotto aggiunto" : prodottiAggiunti + " prodotti aggiunti";
                 operazioni.add(msg);
             }
 
-            // Prodotti rimossi
             if (prodottiRimossi > 0) {
                 String msg = (prodottiRimossi == 1) ? "1 prodotto rimosso" : prodottiRimossi + " prodotti rimossi";
                 operazioni.add(msg);
@@ -595,7 +652,6 @@ public class OrdiniService {
             return String.join(" e ", operazioni) + " con successo";
 
         } else {
-            // Operazioni parziali con errori
             List<String> successi = new ArrayList<>();
 
             if (prodottiAggiunti > 0) {
@@ -621,4 +677,5 @@ public class OrdiniService {
     private LocalDate oggiLavorativo() {
         return dataLavorativaUtil.getDataLavorativa();
     }
+
 }

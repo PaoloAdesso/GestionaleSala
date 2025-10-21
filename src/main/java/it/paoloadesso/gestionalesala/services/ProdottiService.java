@@ -1,11 +1,18 @@
 package it.paoloadesso.gestionalesala.services;
 
-import it.paoloadesso.gestionalesala.dto.*;
+import it.paoloadesso.gestionalesala.dto.CreaProdottiDTO;
+import it.paoloadesso.gestionalesala.dto.ProdottiDTO;
+import it.paoloadesso.gestionalesala.entities.OrdiniEntity;
 import it.paoloadesso.gestionalesala.entities.ProdottiEntity;
 import it.paoloadesso.gestionalesala.mapper.ProdottiMapper;
 import it.paoloadesso.gestionalesala.repositories.OrdiniProdottiRepository;
+import it.paoloadesso.gestionalesala.repositories.OrdiniRepository;
 import it.paoloadesso.gestionalesala.repositories.ProdottiRepository;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Positive;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,14 +23,17 @@ import java.util.List;
 @Service
 public class ProdottiService {
 
+    private static final Logger log = LoggerFactory.getLogger(ProdottiService.class);
     private final ProdottiRepository prodottiRepository;
     private final ProdottiMapper prodottiMapper;
     private final OrdiniProdottiRepository ordiniProdottiRepository;
+    private final OrdiniRepository ordiniRepository;
 
-    public ProdottiService(ProdottiRepository prodottiRepository, ProdottiMapper prodottiMapper, OrdiniProdottiRepository ordiniProdottiRepository) {
+    public ProdottiService(ProdottiRepository prodottiRepository, ProdottiMapper prodottiMapper, OrdiniProdottiRepository ordiniProdottiRepository, OrdiniRepository ordiniRepository) {
         this.prodottiRepository = prodottiRepository;
         this.prodottiMapper = prodottiMapper;
         this.ordiniProdottiRepository = ordiniProdottiRepository;
+        this.ordiniRepository = ordiniRepository;
     }
 
     @Transactional
@@ -83,14 +93,20 @@ public class ProdottiService {
     }
 
     @Transactional
-    public void deleteProdotto(Long idProdotto) {
+    public void deleteProdotto(@Positive Long idProdotto) {
+        boolean esisteGiaCancellato = prodottiRepository.existsDeletedProdotto(idProdotto);
+
+        if (esisteGiaCancellato) {
+            throw new IllegalStateException("Prodotto con ID " + idProdotto + " già cancellato");
+        }
+
         ProdottiEntity prodotto = prodottiRepository.findById(idProdotto)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND
-                        , "Prodotto con ID " + idProdotto + " non trovato."));
+                .orElseThrow(() -> new EntityNotFoundException("Prodotto con ID " + idProdotto + " non trovato" ));
 
         prodottiRepository.delete(prodotto);
-    }
 
+        log.info("Prodotto con ID {} cancellato (soft delete)", idProdotto);
+    }
 
     public ProdottiDTO ripristinaSingoloProdotto(Long idProdotto) {
         ProdottiEntity prodottoDaRipristinare = prodottiRepository.findByIdInclusoEliminati(idProdotto)

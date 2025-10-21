@@ -120,6 +120,40 @@ public class OrdineController {
     }
 
     @Operation(
+            summary = "Recupera tutti gli ordini chiusi",
+            description = "Restituisce la lista completa di tutti gli ordini con stato CHIUSO, " +
+                    "indipendentemente dalla data. Include il dettaglio dei tavoli e dei prodotti ordinati. " +
+                    "Utile per consultare lo storico completo delle vendite."
+    )
+    @GetMapping("/chiusi")
+    public ResponseEntity<List<TavoloConOrdiniChiusiDTO>> getOrdiniChiusi() {
+        return ResponseEntity.ok(ordiniService.getOrdiniChiusi());
+    }
+
+    @Operation(
+            summary = "Recupera ordini chiusi del turno corrente",
+            description = "Restituisce gli ordini chiusi del turno lavorativo corrente con dettagli " +
+                    "completi su tavoli e prodotti. Rispetta la logica del turno lavorativo: " +
+                    "se richiesto dopo mezzanotte ma prima dell'orario di chiusura turno, " +
+                    "restituisce gli ordini chiusi del giorno precedente. Utile per report di fine turno."
+    )
+    @GetMapping("/chiusi-oggi")
+    public ResponseEntity<List<TavoloConOrdiniChiusiDTO>> getOrdiniChiusiDiOggi() {
+        return ResponseEntity.ok(ordiniService.getOrdiniChiusiDiOggi());
+    }
+
+    @Operation(
+            summary = "Recupera tutti gli ordini eliminati",
+            description = "Restituisce la lista completa di tutti gli ordini cancellati (soft delete). " +
+                    "Utile per operazioni di audit, controllo o eventuale ripristino. " +
+                    "Gli ordini eliminati non sono visibili nelle normali operazioni di gestione."
+    )
+    @GetMapping("/eliminati")
+    public ResponseEntity<List<OrdiniDTO>> getAllOrdiniEliminati() {
+        return ResponseEntity.ok(ordiniService.getAllOrdiniEliminati());
+    }
+
+    @Operation(
             summary = "Modifica un ordine esistente",
             description = "Permette di modificare un ordine aggiungendo/rimuovendo prodotti o cambiando tavolo. " +
                     "Tutti i campi nel request body sono opzionali: invia solo quelli che vuoi modificare. " +
@@ -128,12 +162,12 @@ public class OrdineController {
                     "mentre altri possono fallire (es. prodotto non trovato). " +
                     "La risposta contiene il riepilogo di successi e fallimenti."
     )
-    @PatchMapping("/{id}")
+    @PatchMapping("/{idOrdine}")
     public ResponseEntity<RisultatoModificaOrdineDTO> modificaOrdine(
-            @PathVariable Long id,
+            @PathVariable Long idOrdine,
             @Valid @RequestBody ModificaOrdineRequestDTO requestDto) {
 
-        RisultatoModificaOrdineDTO risultato = ordiniService.modificaOrdine(id, requestDto);
+        RisultatoModificaOrdineDTO risultato = ordiniService.modificaOrdine(idOrdine, requestDto);
 
         if (risultato.isOperazioneCompleta()) {
             return ResponseEntity.ok(risultato);
@@ -158,26 +192,27 @@ public class OrdineController {
     }
 
     @Operation(
-            summary = "Recupera tutti gli ordini chiusi",
-            description = "Restituisce la lista completa di tutti gli ordini con stato CHIUSO, " +
-                    "indipendentemente dalla data. Include il dettaglio dei tavoli e dei prodotti ordinati. " +
-                    "Utile per consultare lo storico completo delle vendite."
+            summary = "Ripristina un ordine eliminato",
+            description = "Ripristina un ordine precedentemente eliminato (soft delete) rendendolo " +
+                    "nuovamente visibile e operativo. Se l'ordine non era CHIUSO al momento della " +
+                    "cancellazione, il tavolo collegato viene automaticamente impostato come OCCUPATO. " +
+                    "Operazione utile per correggere cancellazioni accidentali."
     )
-    @GetMapping("/chiusi")
-    public ResponseEntity<List<TavoloConOrdiniChiusiDTO>> getOrdiniChiusi() {
-        return ResponseEntity.ok(ordiniService.getOrdiniChiusi());
+    @PatchMapping("/{ordineId}/ripristina")
+    public ResponseEntity<OrdiniDTO> ripristinaSingoloProdotto(@PathVariable @Positive Long ordineId) {
+        return ResponseEntity.ok(ordiniService.ripristinaOrdine(ordineId));
     }
 
     @Operation(
-            summary = "Recupera ordini chiusi del turno corrente",
-            description = "Restituisce gli ordini chiusi del turno lavorativo corrente con dettagli " +
-                    "completi su tavoli e prodotti. Rispetta la logica del turno lavorativo: " +
-                    "se richiesto dopo mezzanotte ma prima dell'orario di chiusura turno, " +
-                    "restituisce gli ordini chiusi del giorno precedente. Utile per report di fine turno."
+            summary = "Elimina un ordine (soft delete)",
+            description = "Elimina logicamente un ordine impostando il flag deleted = true. " +
+                    "L'ordine rimane nel database per audit trail ma non è più visibile " +
+                    "nelle operazioni normali. Operazione irreversibile tramite API standard."
     )
-    @GetMapping("/chiusi-oggi")
-    public ResponseEntity<List<TavoloConOrdiniChiusiDTO>> getOrdiniChiusiDiOggi() {
-        return ResponseEntity.ok(ordiniService.getOrdiniChiusiDiOggi());
+    @DeleteMapping("{idOrdine}")
+    public ResponseEntity<Void> eliminaSingoloOrdine(@PathVariable @Positive Long idOrdine){
+        ordiniService.deleteOrdine(idOrdine);
+        return ResponseEntity.noContent().build();
     }
 
 }

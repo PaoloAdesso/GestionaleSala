@@ -21,20 +21,16 @@ public interface ProdottiRepository extends JpaRepository<ProdottiEntity, Long> 
     @Query("SELECT DISTINCT p.categoria FROM ProdottiEntity p ORDER BY p.categoria")
     List<String> findAllCategorieDistinct();
 
-    /**
-     * Trova un prodotto per ID IGNORANDO il filtro @SQLRestriction.
-     * Usa SQL nativo per bypassare i filtri Hibernate.
-     */
     @Query(value = "SELECT * FROM prodotti WHERE id_prodotto = :id", nativeQuery = true)
     Optional<ProdottiEntity> findByIdInclusoEliminati(@Param("id") Long id);
 
-    /**
-     * Trova tutti i prodotti eliminati.
-     * Usa SQL nativo per bypassare i filtri Hibernate.
-     */
     @Query(value = "SELECT * FROM prodotti WHERE deleted = true", nativeQuery = true)
     List<ProdottiEntity> findAllProdottiEliminati();
 
     @Query(value = "SELECT * FROM prodotti WHERE nome_prodotto ILIKE CONCAT('%', :nomeProdotto, '%')", nativeQuery = true)
     List<ProdottiEntity> findByNomeContainingIgnoreCaseNative (@Param("nomeProdotto") String nomeProdotto);
+
+    @Query(value = "SELECT EXISTS(SELECT 1 FROM prodotti WHERE id_prodotto = :id AND deleted = true)",
+            nativeQuery = true)
+    boolean existsDeletedProdotto(@Param("id") Long id);
 }
