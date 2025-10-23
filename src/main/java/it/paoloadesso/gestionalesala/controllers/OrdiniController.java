@@ -18,11 +18,11 @@ import java.util.List;
 @RequestMapping("/api/ordini")
 @Validated
 @Tag(name = "Gestione Ordini", description = "API per la chiusura e consultazione storico ordini")
-public class OrdineController {
+public class OrdiniController {
 
     private final OrdiniService ordiniService;
 
-    public OrdineController(OrdiniService ordiniService) {
+    public OrdiniController(OrdiniService ordiniService) {
         this.ordiniService = ordiniService;
     }
 

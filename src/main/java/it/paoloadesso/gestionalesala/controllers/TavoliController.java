@@ -86,7 +86,10 @@ public class TavoliController {
         return ResponseEntity.ok("Lo stato di tutti i tavoli è stato reimpostato a «LIBERO».");
     }
 
-
+    @Operation(
+            summary = "Ripristina un tavolo eliminato",
+            description = "Riattiva un tavolo precedentemente soft-deleted rendendolo nuovamente disponibile nelle operazioni di sala. Utile per ripristinare tavoli eliminati per errore o in seguito a manutenzioni."
+    )
     @PatchMapping("/{idTavolo}/ripristina")
     public ResponseEntity<TavoliConDettaglioDeleteDTO> ripristinaSingoloTavolo(@PathVariable @Positive Long idTavolo) {
         return ResponseEntity.ok(tavoliService.ripristinaSingoloTavolo(idTavolo));

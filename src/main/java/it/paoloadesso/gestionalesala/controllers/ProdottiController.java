@@ -95,11 +95,15 @@ public class ProdottiController {
         return ResponseEntity.ok(prodottiService.getProdottiByContainingNome(nomeProdotto));
     }
 
+    @Operation(
+            summary = "Cerca in attivi ed eliminati",
+            description = "Cerca prodotti sia attivi (ordinabili) che eliminati (soft-delete) filtrando per nome, in modo case-insensitive. Utile per audit e ripristini: consente di vedere prodotti rimossi dal menu e valutarne il recupero."
+    )
     @GetMapping("/cerca-per-nome-tutti-i-prodotti-attivi-ed-eliminati")
     public ResponseEntity<List<ProdottiConDettaglioDeleteDTO>> cercaTuttiProdottiAttiviEdEliminatiPerNome(
-            @Parameter(description = "Parte del nome del prodotto da cercare (case-insensitive)",
-                    example = "pizza")
-            @RequestParam @NotBlank String nomeProdotto) {
+            @Parameter(description = "Parte del nome del prodotto da cercare (case-insensitive)", example = "pizza")
+            @RequestParam @NotBlank String nomeProdotto
+    ) {
         return ResponseEntity.ok(prodottiService.getTuttiProdottiAttiviEdEliminatiByContainingNome(nomeProdotto));
     }
 
