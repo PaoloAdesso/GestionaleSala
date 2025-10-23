@@ -35,10 +35,16 @@ Ogni sezione deve includere punti chiari e specifici, preferendo più dettagli a
 - Endpoint creati/modificati: metodo e path (es. `POST /prodotti`, `PATCH /gestione-sala/libera-tutti-i-tavoli`).
 - Classi/DTO/Entità toccate: nomi file e principali campi aggiunti/rimossi.
 - Annotazioni usate: es. `@SQLDelete`, `@PreRemove`, `@Transactional`, `@Operation`, `@Tag`, `@Valid`, constraint Bean Validation.
-- Migrazioni DB: id versione (es. `V3__...`), colonne aggiunte/modificate (`deleted`, `deleted_at`), indici/constraint.
+- **Migrazioni Database (PRIORITÀ ALTA)**:
+    - Controlla sempre i file in `src/main/resources/db/migration/` o `db/changelog/`
+    - Per migration NUOVE: nome file, tabelle/colonne create, indici, constraint
+    - Per migration MODIFICATE: nome file, cosa è cambiato, motivo della modifica
+    - Includi dettagli su ALTER TABLE, CREATE/DROP INDEX, ADD/DROP CONSTRAINT
+    - Se ci sono script di rollback o down migration, menzionalo
 - Configurazioni: file aggiornati (es. `pom.xml`, `application.properties`), dipendenze aggiunte/rimosse.
-- Motivazioni: perché la modifica è necessaria (compliance REST, performance, coerenza naming, bugfix).
+- Motivazioni: perché la modifica è necessaria (compliance REST, performance, coerenza naming, bugfix, correzione schema Database).
 - Stato HTTP e header significativi: es. `Location` su `POST`, codici 200/201/204/400/404/409/422.
+
 
 ## 4) Stile e lingua
 
@@ -89,8 +95,26 @@ Oggetto: <riassunto conciso al presente>
 - Aggiunto header `Location` su `POST` per compliance REST.
 
 ### Migrazioni Database
-- Migration `<VX__descrizione>`: colonne `deleted`, `deleted_at`, indici/constraint.
-- Script di rollback se applicabile.
+
+IMPORTANTE: Controlla sempre i file di migration (Flyway/Liquibase) nella directory `db/migration` o `resources/db/migration`.
+
+Per ogni migration (nuova O modificata), includi:
+
+**Migration nuove:**
+- Nome completo del file (es. `V5__add_soft_delete_to_products.sql`)
+- Colonne aggiunte con tipo e constraint (es. `deleted BOOLEAN DEFAULT false`, `deleted_at TIMESTAMP`)
+- Indici creati (es. `CREATE INDEX idx_products_deleted ON products(deleted)`)
+- Foreign key o constraint aggiunte
+- Tabelle create con struttura principale
+
+**Migration modificate:**
+- Nome del file modificato
+- Cosa è stato aggiunto/modificato/rimosso nella migration
+- Motivo della modifica (es. "correzione tipo colonna", "aggiunta indice mancante", "fix constraint")
+- Se è stato modificato lo schema: quali colonne/tabelle sono state alterate
+
+**Rollback/Down scripts:**
+- Se presenti script di rollback, indicalo
 
 ### Documentazione e Configurazione
 - Documentazione Swagger con `@Operation` e `@Tag` su <controller>.
@@ -135,8 +159,55 @@ Oggetto: Estendi gestione sala e pagamenti
 - Aggiornata doc Swagger per i nuovi endpoint.
 - Abilitato SQL debug per tracciare query critiche.
 
+Esempio C — Modifica migration esistente e correzione schema
+
+Oggetto: Correggi migration prodotti e aggiungi indici
+
+### Migrazioni Database
+- **Modificato** `V3__create_products_table.sql`:
+    - Cambiato tipo colonna `price` da `DECIMAL(10,2)` a `DECIMAL(12,2)` per supportare prezzi più alti
+    - Aggiunto constraint `CHECK (price >= 0)`
+    - Rimosso indice `idx_old_name` non più utilizzato
+- **Nuova** `V6__add_product_indexes.sql`:
+    - Creato indice `idx_products_name` su colonna `name` per migliorare performance ricerca
+    - Creato indice composito `idx_products_category_deleted` su `(category_id, deleted)`
+
+### Entità e Relazioni JPA
+- Aggiornato `ProductEntity`: modificato tipo campo `price` da `BigDecimal` con `@Column(precision=10, scale=2)` a `precision=12`
+- Aggiunte validazioni: `@DecimalMin("0.00")` su `price`
+
+### Motivazione
+- Necessario supportare prodotti con prezzi superiori a 99.999,99€
+- Ottimizzate query di ricerca per nome e filtro categoria+eliminati
+
+
 ## 7) Preferenze di dettaglio
 
 - Non limitare la lunghezza del corpo: meglio troppo dettagliato che troppo sintetico.
 - Includi sempre nomi file/classi/metodi/annotazioni quando rilevanti.
 - Mantieni l’ordine: prima API/contract, poi domain (DTO/Entity), poi service/repository, poi DB/config/doc.
+- Controlla SEMPRE i file di migration prima di generare il messaggio. Se ci sono modifiche a file `.sql` esistenti o nuovi file di migration, DEVONO essere menzionati con dettagli precisi su cosa cambia nello schema database.
+- Se una migration è stata modificata dopo la creazione, spiega perché (bugfix, aggiunta indice dimenticato, correzione tipo dato, ecc.).
+
+## 8) Dettagli aggiuntivi sulle migration
+
+Quando analizzi i file di migration, cerca e riporta:
+
+- File `.sql` in `src/main/resources/db/migration/` (Flyway) o `db/changelog/` (Liquibase)
+- Modifiche a tabelle esistenti: `ALTER TABLE <nome> ADD COLUMN <colonna>`
+- Modifiche a vincoli: `ADD CONSTRAINT`, `DROP CONSTRAINT`
+- Modifiche a indici: `CREATE INDEX`, `DROP INDEX`
+- Modifiche a procedure/trigger se presenti
+- Modifiche a script di seed/dati iniziali
+
+
+## 9) Regole di esclusione
+Quando generi il messaggio, ignora file/cartelle che corrispondono a:
+- `.idea/**`, `target/**`, `build/**`, `out/**`
+- `*.md`, `docs/**`, `git-commit-instructions.md`
+- `.env*`, `**/secrets/**`
+- `pnpm-lock.yaml`, `package-lock.json`, `*.lock`
+- `src/main/resources/db/seed/**`
+
+Se sono presenti migrazioni, considera solo `src/main/resources/db/migration/**` e ignora seed/mock.
+Descrivi solo i file non ignorati, anche se altri sono in stage.
