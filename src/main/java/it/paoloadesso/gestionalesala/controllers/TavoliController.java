@@ -2,12 +2,11 @@ package it.paoloadesso.gestionalesala.controllers;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import it.paoloadesso.gestionalesala.dto.TavoliDTO;
-import it.paoloadesso.gestionalesala.dto.TavoloApertoConDettagliOrdineDTO;
-import it.paoloadesso.gestionalesala.dto.TavoloApertoDTO;
+import it.paoloadesso.gestionalesala.dto.*;
 import it.paoloadesso.gestionalesala.services.CassaService;
 import it.paoloadesso.gestionalesala.services.TavoliService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -15,15 +14,15 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/gestione-sala")
+@RequestMapping("/gestione-tavoli")
 @Validated
-@Tag(name = "Gestione Sala", description = "API per la gestione della sala dalla cassa")
-public class CassaController {
+@Tag(name = "Gestione Tavoli", description = "API per la gestione dei tavoli")
+public class TavoliController {
 
     private final CassaService cassaService;
     private final TavoliService tavoliService;
 
-    public CassaController(CassaService cassaService, TavoliService tavoliService) {
+    public TavoliController(CassaService cassaService, TavoliService tavoliService) {
         this.cassaService = cassaService;
         this.tavoliService = tavoliService;
     }
@@ -50,6 +49,17 @@ public class CassaController {
     }
 
     @Operation(
+            summary = "Recupera tutti i tavoli eliminati",
+            description = "Restituisce la lista completa di tutti i tavoli cancellati (soft delete). " +
+                    "Utile per operazioni di audit, controllo o eventuale ripristino. " +
+                    "I tavoli eliminati non sono visibili nelle normali operazioni di gestione."
+    )
+    @GetMapping("/eliminati")
+    public ResponseEntity<List<TavoliDTO>> getAllTavoliEliminati() {
+        return ResponseEntity.ok(tavoliService.getAllTavoliEliminati());
+    }
+
+    @Operation(
             summary = "Aggiorna lo stato di un tavolo",
             description = "Permette di modificare lo stato di un tavolo (LIBERO, OCCUPATO, RISERVATO) " +
                     "o altre informazioni. Supporta aggiornamenti parziali: invia solo i campi da modificare. " +
@@ -61,18 +71,6 @@ public class CassaController {
             @RequestBody @Valid TavoliDTO tavolo
     ) {
         return ResponseEntity.ok(tavoliService.aggiornaTavolo(id, tavolo));
-    }
-
-    @Operation(
-            summary = "Elimina un tavolo",
-            description = "Elimina definitivamente un tavolo e tutti gli ordini ad esso collegati. " +
-                    "ATTENZIONE: questa operazione è irreversibile e rimuove anche lo storico degli ordini del tavolo. " +
-                    "Usare solo per tavoli che non esistono più fisicamente nel ristorante."
-    )
-    @DeleteMapping("/{idTavolo}")
-    public ResponseEntity<Void> deleteTavolo(@PathVariable Long idTavolo){
-        tavoliService.eliminaTavoloByIdERelativiOrdiniCollegati(idTavolo);
-        return ResponseEntity.noContent().build();
     }
 
     @Operation(
@@ -88,9 +86,36 @@ public class CassaController {
         return ResponseEntity.ok("Lo stato di tutti i tavoli è stato reimpostato a «LIBERO».");
     }
 
-    // TODO: data ordine. (cronjob) eliminare ordini del giorno precedente
 
-    // TODO: Soft-delete dei tavoli
+    @PatchMapping("/{idTavolo}/ripristina")
+    public ResponseEntity<TavoliConDettaglioDeleteDTO> ripristinaSingoloTavolo(@PathVariable @Positive Long idTavolo) {
+        return ResponseEntity.ok(tavoliService.ripristinaSingoloTavolo(idTavolo));
+    }
+
+    @Operation(
+            summary = "Elimina un tavolo (soft delete)",
+            description = "Elimina un tavolo e tutti gli ordini ad esso collegati."
+    )
+    @DeleteMapping("/{idTavolo}")
+    public ResponseEntity<Void> deleteTavolo(@PathVariable Long idTavolo){
+        tavoliService.eliminaTavoloByIdERelativiOrdiniCollegati(idTavolo);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(
+            summary = "Elimina un tavolo (hard delete)",
+            description = "Elimina definitivamente un tavolo e tutti gli ordini ad esso collegati. " +
+                    "ATTENZIONE: questa operazione è irreversibile e rimuove anche lo storico degli ordini del tavolo. " +
+                    "Usare solo per tavoli che non esistono più fisicamente nel ristorante."
+    )
+    @DeleteMapping("/hard-delete/{idTavolo}")
+    public ResponseEntity<Void> hardDeleteTavolo(@PathVariable Long idTavolo){
+        tavoliService.eliminaFisicamenteTavoloByIdERelativiOrdiniCollegati(idTavolo);
+        return ResponseEntity.noContent().build();
+    }
+
+
+    // TODO: data ordine. (cronjob) eliminare ordini del giorno precedente
 
     // TODO: Logger
 

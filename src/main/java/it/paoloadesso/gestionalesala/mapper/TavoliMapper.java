@@ -1,8 +1,7 @@
 package it.paoloadesso.gestionalesala.mapper;
 
-import it.paoloadesso.gestionalesala.dto.CreaTavoliRequestDTO;
-import it.paoloadesso.gestionalesala.dto.TavoliDTO;
-import it.paoloadesso.gestionalesala.dto.TavoloApertoDTO;
+import it.paoloadesso.gestionalesala.dto.*;
+import it.paoloadesso.gestionalesala.entities.ProdottiEntity;
 import it.paoloadesso.gestionalesala.entities.TavoliEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -25,4 +24,6 @@ public interface TavoliMapper {
     TavoliEntity dtoToEntity(TavoliDTO aggiornaTavoliRequestDto);
 
     TavoliDTO simpleEntityToDto(TavoliEntity tavoliEntity);
+
+    TavoliConDettaglioDeleteDTO tavoliEntityToTavoliConDettaglioDeleteDto(TavoliEntity tavoliEntity);
 }

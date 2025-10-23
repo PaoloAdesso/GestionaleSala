@@ -210,9 +210,18 @@ public class OrdineController {
                     "nelle operazioni normali. Operazione irreversibile tramite API standard."
     )
     @DeleteMapping("{idOrdine}")
-    public ResponseEntity<Void> eliminaSingoloOrdine(@PathVariable @Positive Long idOrdine){
-        ordiniService.deleteOrdine(idOrdine);
+    public ResponseEntity<Void> deleteOrdine(@PathVariable @Positive Long idOrdine){
+        ordiniService.eliminaOrdine(idOrdine);
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(
+            summary = "Elimina un ordine",
+            description = "Elimina definitivamente un ordine ed i relativi prodotti ordinati collegati." +
+                    " Operazione irreversibile."    )
+    @DeleteMapping("hard-delete/{idOrdine}")
+    public ResponseEntity<Void> hardDeleteOrdine(@PathVariable @Positive Long idOrdine){
+        ordiniService.eliminaFisicamenteOrdine(idOrdine);
+        return ResponseEntity.noContent().build();
+    }
 }

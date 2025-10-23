@@ -30,7 +30,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -432,7 +431,7 @@ public class OrdiniService {
     }
 
     @Transactional
-    public void deleteOrdine(Long idOrdine) {
+    public void eliminaOrdine(Long idOrdine) {
         boolean esisteGiaCancellato = ordiniRepository.existsDeletedOrdine(idOrdine);
 
         if (esisteGiaCancellato) {
@@ -442,9 +441,27 @@ public class OrdiniService {
         OrdiniEntity ordine = ordiniRepository.findById(idOrdine)
                 .orElseThrow(() -> new EntityNotFoundException("Ordine non trovato: " + idOrdine));
 
-        ordiniRepository.delete(ordine);
+        List<OrdiniProdottiEntity> prodottiOrdine = ordiniProdottiRepository.findByOrdineIdOrdine(idOrdine);
+
+        if (!prodottiOrdine.isEmpty()) {
+            ordiniProdottiRepository.deleteAll(prodottiOrdine);
+            log.info("Eliminati {} prodotti dell'ordine {}", prodottiOrdine.size(), idOrdine);
+        }
+            ordiniRepository.delete(ordine);
 
         log.info("Ordine {} cancellato (soft delete)", idOrdine);
+    }
+
+    @Transactional
+    public void eliminaFisicamenteOrdine(Long idOrdine) {
+        OrdiniEntity ordine = ordiniRepository.findByIdOrdine(idOrdine);
+
+        if (ordine == null) {
+            throw new EntityNotFoundException("Nessun ordine con ID " + idOrdine + " presente");
+        }
+
+        ordiniRepository.deletePhysically(idOrdine);
+        log.info("Ordine con ID {} cancellato definitivamente (hard delete)", idOrdine);
     }
 
     public List<OrdiniDTO> getAllOrdiniEliminati() {
@@ -466,9 +483,9 @@ public class OrdiniService {
             throw new IllegalStateException("Ordine senza tavolo: impossibile ripristinare");
         }
 
-//        if (Boolean.TRUE.equals(tavolo.getDeleted())) {
-//            throw new IllegalStateException("Il tavolo collegato è stato rimosso: ripristino non consentito");
-//        }
+        if (tavolo.getDeleted()) {
+            throw new IllegalStateException("Il tavolo collegato è stato rimosso: ripristino non consentito");
+        }
 
         ordine.setDeleted(false);
         ordine.setDeletedAt(null);

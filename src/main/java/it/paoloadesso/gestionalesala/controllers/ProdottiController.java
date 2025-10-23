@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import it.paoloadesso.gestionalesala.dto.CreaProdottiDTO;
+import it.paoloadesso.gestionalesala.dto.ProdottiConDettaglioDeleteDTO;
 import it.paoloadesso.gestionalesala.dto.ProdottiDTO;
 import it.paoloadesso.gestionalesala.services.ProdottiService;
 import jakarta.validation.Valid;
@@ -86,12 +87,20 @@ public class ProdottiController {
                     "Utile per il personale quando deve cercare rapidamente un prodotto senza conoscerne il nome esatto. " +
                     "Esempio: 'pizza' trova 'Pizza Margherita', 'Pizza Diavola', ecc."
     )
-    @GetMapping("/cerca")
+    @GetMapping("/cerca-per-nome")
     public ResponseEntity<List<ProdottiDTO>> cercaProdottiPerNome(
             @Parameter(description = "Parte del nome del prodotto da cercare (case-insensitive)",
                     example = "pizza")
             @RequestParam @NotBlank String nomeProdotto) {
         return ResponseEntity.ok(prodottiService.getProdottiByContainingNome(nomeProdotto));
+    }
+
+    @GetMapping("/cerca-per-nome-tutti-i-prodotti-attivi-ed-eliminati")
+    public ResponseEntity<List<ProdottiConDettaglioDeleteDTO>> cercaTuttiProdottiAttiviEdEliminatiPerNome(
+            @Parameter(description = "Parte del nome del prodotto da cercare (case-insensitive)",
+                    example = "pizza")
+            @RequestParam @NotBlank String nomeProdotto) {
+        return ResponseEntity.ok(prodottiService.getTuttiProdottiAttiviEdEliminatiByContainingNome(nomeProdotto));
     }
 
     @Operation(
@@ -115,7 +124,7 @@ public class ProdottiController {
                     "o prodotti rimossi per errore."
     )
     @PatchMapping("/{prodottoId}/ripristina")
-    public ResponseEntity<ProdottiDTO> ripristinaSingoloProdotto(@PathVariable @Positive Long prodottoId) {
+    public ResponseEntity<ProdottiConDettaglioDeleteDTO> ripristinaSingoloProdotto(@PathVariable @Positive Long prodottoId) {
         return ResponseEntity.ok(prodottiService.ripristinaSingoloProdotto(prodottoId));
     }
 

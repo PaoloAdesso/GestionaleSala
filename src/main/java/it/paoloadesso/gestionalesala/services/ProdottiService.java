@@ -1,8 +1,8 @@
 package it.paoloadesso.gestionalesala.services;
 
 import it.paoloadesso.gestionalesala.dto.CreaProdottiDTO;
+import it.paoloadesso.gestionalesala.dto.ProdottiConDettaglioDeleteDTO;
 import it.paoloadesso.gestionalesala.dto.ProdottiDTO;
-import it.paoloadesso.gestionalesala.entities.OrdiniEntity;
 import it.paoloadesso.gestionalesala.entities.ProdottiEntity;
 import it.paoloadesso.gestionalesala.mapper.ProdottiMapper;
 import it.paoloadesso.gestionalesala.repositories.OrdiniProdottiRepository;
@@ -44,14 +44,14 @@ public class ProdottiService {
         }
 
         ProdottiEntity prodotto = prodottiRepository.save(prodottiMapper.createProdottiDtoToEntity(dto));
-        return prodottiMapper.prodottiEntityToDto(prodotto);
+        return prodottiMapper.prodottiEntityToProdottiDto(prodotto);
     }
 
     public List<ProdottiDTO> getAllProdotti() {
         List<ProdottiEntity> entities = prodottiRepository.findAll();
 
         return entities.stream()
-                .map(prodottiMapper::prodottiEntityToDto)
+                .map(prodottiMapper::prodottiEntityToProdottiDto)
                 .toList();
     }
 
@@ -70,14 +70,24 @@ public class ProdottiService {
         }
         List<ProdottiEntity> entities = prodottiRepository.findByNomeContainingIgnoreCase(nomeProdotto.trim());
         return entities.stream()
-                .map(prodottiMapper::prodottiEntityToDto)
+                .map(prodottiMapper::prodottiEntityToProdottiDto)
+                .toList();
+    }
+
+    public List<ProdottiConDettaglioDeleteDTO> getTuttiProdottiAttiviEdEliminatiByContainingNome(@NotBlank String nomeProdotto) {
+        if (nomeProdotto == null || nomeProdotto.trim().isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Il nome del prodotto non può essere vuoto.");
+        }
+        List<ProdottiEntity> entities = prodottiRepository.findByNomeContainingIgnoreCaseNative(nomeProdotto.trim());
+        return entities.stream()
+                .map(prodottiMapper::prodottiEntityToProdottiConDettaglioDeleteDto)
                 .toList();
     }
 
     public List<ProdottiDTO> getAllProdottiEliminati() {
         List<ProdottiEntity> entities = prodottiRepository.findAllProdottiEliminati();
         return entities.stream()
-                .map(prodottiMapper::prodottiEntityToDto)
+                .map(prodottiMapper::prodottiEntityToProdottiDto)
                 .toList();
     }
 
@@ -88,7 +98,7 @@ public class ProdottiService {
 
         List<ProdottiEntity> entities = prodottiRepository.findByCategoriaContainingIgnoreCase(nomeCategoria.trim());
         return entities.stream()
-                .map(prodottiMapper::prodottiEntityToDto)
+                .map(prodottiMapper::prodottiEntityToProdottiDto)
                 .toList();
     }
 
@@ -108,7 +118,7 @@ public class ProdottiService {
         log.info("Prodotto con ID {} cancellato (soft delete)", idProdotto);
     }
 
-    public ProdottiDTO ripristinaSingoloProdotto(Long idProdotto) {
+    public ProdottiConDettaglioDeleteDTO ripristinaSingoloProdotto(Long idProdotto) {
         ProdottiEntity prodottoDaRipristinare = prodottiRepository.findByIdInclusoEliminati(idProdotto)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST,
                         "Prodotto con ID " + idProdotto + " non trovato."));
@@ -123,6 +133,6 @@ public class ProdottiService {
         prodottoDaRipristinare.setDeletedAt(null);
         ProdottiEntity prodottoRipristinato = prodottiRepository.save(prodottoDaRipristinare);
 
-        return prodottiMapper.prodottiEntityToDto(prodottoRipristinato);
+        return prodottiMapper.prodottiEntityToProdottiConDettaglioDeleteDto(prodottoRipristinato);
     }
 }

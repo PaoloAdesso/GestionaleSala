@@ -45,6 +45,10 @@ public interface OrdiniRepository extends JpaRepository<OrdiniEntity, Long> {
     @Query(value = "SELECT * FROM ordini WHERE deleted = true ORDER BY deleted_at DESC", nativeQuery = true)
     List<OrdiniEntity> findDeletedOrdini();
 
+    @Modifying
+    @Query(value = "DELETE FROM ordini WHERE id_ordine = :id", nativeQuery = true)
+    void deletePhysically(@Param("id") Long id);
+
     @Query(value = "SELECT * FROM ordini WHERE id_ordine = :id AND deleted = true", nativeQuery = true)
     Optional<OrdiniEntity> findDeletedOrdineById(@Param("id") Long id);
 

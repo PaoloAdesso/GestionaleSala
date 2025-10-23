@@ -116,8 +116,8 @@ public class OrdiniEntity {
         this.deleted = true;
         this.deletedAt = LocalDateTime.now();
 
-        String numeroTavolo = (tavolo != null) ? tavolo.getNumeroNomeTavolo() : "N/A";
-        log.info("Soft delete eseguito per ordine ID {} del tavolo '{}'", idOrdine, numeroTavolo);
+        String numeroNomeTavolo = (tavolo != null) ? tavolo.getNumeroNomeTavolo() : "N/A";
+        log.info("Soft delete eseguito per ordine ID {} del tavolo '{}'", idOrdine, numeroNomeTavolo);
         log.debug("Stato ordine al momento della cancellazione: {}", statoOrdine);
     }
 }

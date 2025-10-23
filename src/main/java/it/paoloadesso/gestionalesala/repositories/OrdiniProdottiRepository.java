@@ -36,6 +36,4 @@ public interface OrdiniProdottiRepository extends JpaRepository<OrdiniProdottiEn
     // Conta totale prodotti in un ordine
     @Query("SELECT COUNT(op) FROM OrdiniProdottiEntity op WHERE op.ordine.idOrdine = :idOrdine")
     Integer countByOrdineIdOrdine(@Param("idOrdine") Long idOrdine);
-
-    boolean existsByProdottoIdAndOrdineStatoOrdineNot(Long idProdotto, StatoOrdine statoOrdine);
 }
