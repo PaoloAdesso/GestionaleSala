@@ -19,14 +19,14 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-public class PagamentoService {
+public class PagamentiService {
 
     private final OrdiniProdottiRepository ordiniProdottiRepository;
     private final OrdiniRepository ordiniRepository;
     private final OrdiniService ordiniService;
 
 
-    public PagamentoService(OrdiniProdottiRepository ordiniProdottiRepository, OrdiniRepository ordiniRepository, OrdiniService ordiniService) {
+    public PagamentiService(OrdiniProdottiRepository ordiniProdottiRepository, OrdiniRepository ordiniRepository, OrdiniService ordiniService) {
         this.ordiniProdottiRepository = ordiniProdottiRepository;
         this.ordiniRepository = ordiniRepository;
         this.ordiniService = ordiniService;

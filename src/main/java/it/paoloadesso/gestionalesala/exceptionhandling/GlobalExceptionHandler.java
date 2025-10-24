@@ -4,6 +4,7 @@ import it.paoloadesso.gestionalesala.dto.ErrorResponseDTO;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -123,6 +125,57 @@ public class GlobalExceptionHandler {
         );
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
+    @ExceptionHandler(ModificaVuotaException.class)
+    public ResponseEntity<ErrorResponseDTO> handleModificaVuota(ModificaVuotaException ex) {
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                ex.getMessage(),
+                "400",              // codiceErroreNumerico
+                "MODIFICA_VUOTA"        // codiceErrore
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(ProdottoNotFoundException.class)
+    public ResponseEntity<ErrorResponseDTO> handleProdottoNotFound(ProdottoNotFoundException ex) {
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                ex.getMessage(),
+                "404",              // codiceErroreNumerico
+                "PRODOTTO_NON_TROVATO"  // codiceErrore
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(ProdottoEliminatoException.class)
+    public ResponseEntity<ErrorResponseDTO> handleProdottoEliminato(ProdottoEliminatoException ex) {
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                ex.getMessage(),
+                "409",              // codiceErroreNumerico
+                "PRODOTTO_ELIMINATO"    // codiceErrore
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    @ExceptionHandler(TavoloNotFoundException.class)
+    public ResponseEntity<ErrorResponseDTO> handleTavoloNotFound(TavoloNotFoundException ex) {
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                ex.getMessage(),
+                "404",
+                "TAVOLO_NON_TROVATO"
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    @ExceptionHandler(TavoloEliminatoException.class)
+    public ResponseEntity<ErrorResponseDTO> handleTavoloEliminato(TavoloEliminatoException ex) {
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                ex.getMessage(),
+                "409",
+                "TAVOLO_ELIMINATO"
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
 
     /**
      * Metodo di aiuto: quando manca un parametro, questo metodo decide quale messaggio mostrare.

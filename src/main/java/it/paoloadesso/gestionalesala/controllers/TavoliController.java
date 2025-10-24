@@ -60,17 +60,14 @@ public class TavoliController {
     }
 
     @Operation(
-            summary = "Aggiorna lo stato di un tavolo",
-            description = "Permette di modificare lo stato di un tavolo (LIBERO, OCCUPATO, RISERVATO) " +
-                    "o altre informazioni. Supporta aggiornamenti parziali: invia solo i campi da modificare. " +
-                    "Utile per la cassa quando chiude un tavolo o cambia una prenotazione."
+            summary = "Recupera tutti i tavoli attivi",
+            description = "Restituisce la lista completa di tutti i tavoli non eliminati (attivi) " +
+                    "presenti nel ristorante con informazioni su numero/nome e stato. " +
+                    "Utile per visualizzare tutti i tavoli disponibili per il servizio."
     )
-    @PutMapping("/{id}")
-    public ResponseEntity<TavoliDTO> aggiornaTavolo(
-            @PathVariable Long id,
-            @RequestBody @Valid TavoliDTO tavolo
-    ) {
-        return ResponseEntity.ok(tavoliService.aggiornaTavolo(id, tavolo));
+    @GetMapping("/attivi")
+    public ResponseEntity<List<TavoliDTO>> getAllTavoliAttivi() {
+        return ResponseEntity.ok(tavoliService.getAllTavoliAttivi());
     }
 
     @Operation(
@@ -117,6 +114,19 @@ public class TavoliController {
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(
+            summary = "Modifica un tavolo esistente",
+            description = "Aggiorna i dati di un tavolo (nome/numero, stato) con risultato dettagliato. " +
+                    "Supporta modifiche parziali e fornisce informazioni sui campi effettivamente modificati."
+    )
+    @PutMapping("/{tavoloId}")
+    public ResponseEntity<RisultatoModificaTavoloDTO> modificaTavolo(
+            @PathVariable @Positive Long tavoloId,
+            @RequestBody @Valid ModificaTavoloRequestDTO modificaDto) {
+
+        RisultatoModificaTavoloDTO risultato = tavoliService.modificaTavolo(tavoloId, modificaDto);
+        return ResponseEntity.ok(risultato);
+    }
 
     // TODO: data ordine. (cronjob) eliminare ordini del giorno precedente
 

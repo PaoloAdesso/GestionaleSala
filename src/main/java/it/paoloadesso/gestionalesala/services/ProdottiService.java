@@ -1,9 +1,10 @@
 package it.paoloadesso.gestionalesala.services;
 
-import it.paoloadesso.gestionalesala.dto.CreaProdottiDTO;
-import it.paoloadesso.gestionalesala.dto.ProdottiConDettaglioDeleteDTO;
-import it.paoloadesso.gestionalesala.dto.ProdottiDTO;
+import it.paoloadesso.gestionalesala.dto.*;
 import it.paoloadesso.gestionalesala.entities.ProdottiEntity;
+import it.paoloadesso.gestionalesala.exceptionhandling.ModificaVuotaException;
+import it.paoloadesso.gestionalesala.exceptionhandling.ProdottoEliminatoException;
+import it.paoloadesso.gestionalesala.exceptionhandling.ProdottoNotFoundException;
 import it.paoloadesso.gestionalesala.mapper.ProdottiMapper;
 import it.paoloadesso.gestionalesala.repositories.OrdiniProdottiRepository;
 import it.paoloadesso.gestionalesala.repositories.OrdiniRepository;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -135,4 +137,96 @@ public class ProdottiService {
 
         return prodottiMapper.prodottiEntityToProdottiConDettaglioDeleteDto(prodottoRipristinato);
     }
+
+    @Transactional
+    public RisultatoModificaProdottoDTO modificaProdotto(Long prodottoId, ModificaProdottoRequestDTO modificaDto) {
+
+        if (modificaDto.isEmpty()) {
+            throw new ModificaVuotaException();
+        }
+
+        // Salva lo stato originale PRIMA delle modifiche
+        ProdottiEntity prodottoOriginale = prodottiRepository.findById(prodottoId)
+                .orElseThrow(() -> new ProdottoNotFoundException(prodottoId));
+
+        if (prodottoOriginale.getDeleted()) {
+            throw new ProdottoEliminatoException(prodottoId);
+        }
+
+        // Clona l'entità originale per confronto (semplice approccio)
+        ProdottiEntity prodottoClone = new ProdottiEntity();
+        prodottoClone.setNome(prodottoOriginale.getNome());
+        prodottoClone.setCategoria(prodottoOriginale.getCategoria());
+        prodottoClone.setPrezzo(prodottoOriginale.getPrezzo());
+
+        // Applica le modifiche
+        if (modificaDto.getNome() != null) {
+            prodottoOriginale.setNome(modificaDto.getNome());
+        }
+
+        if (modificaDto.getCategoria() != null) {
+            prodottoOriginale.setCategoria(modificaDto.getCategoria());
+        }
+
+        if (modificaDto.getPrezzo() != null) {
+            prodottoOriginale.setPrezzo(modificaDto.getPrezzo());
+        }
+
+        // Salva le modifiche
+        ProdottiEntity prodottoModificato = prodottiRepository.save(prodottoOriginale);
+
+        // Crea il risultato dettagliato confrontando originale vs modificato
+        return creaRisultatoModifica(prodottoClone, prodottoModificato, modificaDto);
+    }
+
+
+    private RisultatoModificaProdottoDTO creaRisultatoModifica(
+            ProdottiEntity prodottoOriginale,
+            ProdottiEntity prodottoModificato,
+            ModificaProdottoRequestDTO modificaDto) {
+
+        List<String> campiModificati = new ArrayList<>();
+
+        // Controllo modifica NOME
+        if (modificaDto.getNome() != null &&
+                !modificaDto.getNome().equals(prodottoOriginale.getNome())) {
+            campiModificati.add("nome");
+        }
+
+        // Controllo modifica CATEGORIA
+        if (modificaDto.getCategoria() != null &&
+                !modificaDto.getCategoria().equals(prodottoOriginale.getCategoria())) {
+            campiModificati.add("categoria");
+        }
+
+        // Controllo modifica PREZZO
+        if (modificaDto.getPrezzo() != null &&
+                (prodottoOriginale.getPrezzo() == null ||
+                        modificaDto.getPrezzo().compareTo(prodottoOriginale.getPrezzo()) != 0)) {
+            campiModificati.add("prezzo");
+        }
+
+        // Costruzione del messaggio dinamico
+        String messaggio;
+        if (campiModificati.isEmpty()) {
+            messaggio = "Nessuna modifica applicata - i valori forniti sono identici a quelli esistenti";
+        } else if (campiModificati.size() == 1) {
+            messaggio = "Campo modificato: " + campiModificati.get(0);
+        } else {
+            messaggio = "Campi modificati: " + String.join(", ", campiModificati);
+        }
+
+        // Operazione sempre completa per le modifiche prodotto (a differenza degli ordini)
+        boolean operazioneCompleta = true;
+
+        return new RisultatoModificaProdottoDTO(
+                prodottiMapper.prodottiEntityToProdottiDto(prodottoModificato),
+                campiModificati,
+                operazioneCompleta,
+                messaggio
+        );
+    }
+
+
+
 }

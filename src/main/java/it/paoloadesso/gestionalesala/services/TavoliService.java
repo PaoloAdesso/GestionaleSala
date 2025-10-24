@@ -1,13 +1,14 @@
 package it.paoloadesso.gestionalesala.services;
 
-import it.paoloadesso.gestionalesala.dto.CreaTavoliRequestDTO;
-import it.paoloadesso.gestionalesala.dto.TavoliConDettaglioDeleteDTO;
-import it.paoloadesso.gestionalesala.dto.TavoliDTO;
+import it.paoloadesso.gestionalesala.dto.*;
 import it.paoloadesso.gestionalesala.entities.OrdiniEntity;
 import it.paoloadesso.gestionalesala.entities.OrdiniProdottiEntity;
 import it.paoloadesso.gestionalesala.entities.ProdottiEntity;
 import it.paoloadesso.gestionalesala.entities.TavoliEntity;
 import it.paoloadesso.gestionalesala.enums.StatoTavolo;
+import it.paoloadesso.gestionalesala.exceptionhandling.ModificaVuotaException;
+import it.paoloadesso.gestionalesala.exceptionhandling.TavoloEliminatoException;
+import it.paoloadesso.gestionalesala.exceptionhandling.TavoloNotFoundException;
 import it.paoloadesso.gestionalesala.mapper.TavoliMapper;
 import it.paoloadesso.gestionalesala.repositories.OrdiniProdottiRepository;
 import it.paoloadesso.gestionalesala.repositories.OrdiniRepository;
@@ -22,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -70,21 +72,6 @@ public class TavoliService {
                 .map(el -> tavoliMapper.simpleEntityToDto(el))
                 .toList();
         return tavoliResponseDto;
-    }
-
-    @Transactional
-    public TavoliDTO aggiornaTavolo(Long id, TavoliDTO dtoTavolo) {
-        if (!tavoliRepository.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND,
-                    "Tavolo con ID " + id + " non trovato.");
-        }
-
-        // Uso il mapper per convertire DTO → Entity
-        TavoliEntity tavolo = tavoliMapper.dtoToEntity(dtoTavolo);
-        tavolo.setId(id);  // Setto l'ID manualmente
-
-        TavoliEntity tavoloAggiornato = tavoliRepository.save(tavolo);
-        return tavoliMapper.simpleEntityToDto(tavoloAggiornato);
     }
 
     @Transactional
@@ -172,6 +159,89 @@ public class TavoliService {
 
     public List<TavoliDTO> getAllTavoliEliminati() {
         List<TavoliEntity> entities = tavoliRepository.findAllTavoliEliminati();
+        return entities.stream()
+                .map(tavoliMapper::simpleEntityToDto)
+                .toList();
+    }
+
+    @Transactional
+    public RisultatoModificaTavoloDTO modificaTavolo(Long tavoloId, ModificaTavoloRequestDTO modificaDto) {
+
+        if (modificaDto.isEmpty()) {
+            throw new ModificaVuotaException();
+        }
+
+        // Trova il tavolo originale
+        TavoliEntity tavoloOriginale = tavoliRepository.findById(tavoloId)
+                .orElseThrow(() -> new TavoloNotFoundException(tavoloId));
+
+        if (tavoloOriginale.getDeleted()) {
+            throw new TavoloEliminatoException(tavoloId);
+        }
+
+        // Clona per confronto
+        TavoliEntity tavoloClone = new TavoliEntity();
+        tavoloClone.setNumeroNomeTavolo(tavoloOriginale.getNumeroNomeTavolo());
+        tavoloClone.setStatoTavolo(tavoloOriginale.getStatoTavolo());
+
+        // Applica le modifiche
+        if (modificaDto.getNumeroNomeTavolo() != null) {
+            tavoloOriginale.setNumeroNomeTavolo(modificaDto.getNumeroNomeTavolo());
+        }
+
+        if (modificaDto.getStatoTavolo() != null) {
+            tavoloOriginale.setStatoTavolo(modificaDto.getStatoTavolo());
+        }
+
+        // Salva le modifiche
+        TavoliEntity tavoloModificato = tavoliRepository.save(tavoloOriginale);
+
+        // Crea il risultato dettagliato
+        return creaRisultatoModifica(tavoloClone, tavoloModificato, modificaDto);
+    }
+
+    private RisultatoModificaTavoloDTO creaRisultatoModifica(
+            TavoliEntity tavoloOriginale,
+            TavoliEntity tavoloModificato,
+            ModificaTavoloRequestDTO modificaDto) {
+
+        List<String> campiModificati = new ArrayList<>();
+
+        // Controllo modifica NUMERO/NOME
+        if (modificaDto.getNumeroNomeTavolo() != null &&
+                !modificaDto.getNumeroNomeTavolo().equals(tavoloOriginale.getNumeroNomeTavolo())) {
+            campiModificati.add("numeroNomeTavolo");
+        }
+
+        // Controllo modifica STATO
+        if (modificaDto.getStatoTavolo() != null &&
+                !modificaDto.getStatoTavolo().equals(tavoloOriginale.getStatoTavolo())) {
+            campiModificati.add("statoTavolo");
+        }
+
+        // Costruzione messaggio
+        String messaggio;
+        if (campiModificati.isEmpty()) {
+            messaggio = "Nessuna modifica applicata - i valori forniti sono identici a quelli esistenti";
+        } else if (campiModificati.size() == 1) {
+            messaggio = "Campo modificato: " + campiModificati.get(0);
+        } else {
+            messaggio = "Campi modificati: " + String.join(", ", campiModificati);
+        }
+
+        boolean operazioneCompleta = true;
+
+        return new RisultatoModificaTavoloDTO(
+                tavoliMapper.simpleEntityToDto(tavoloModificato),
+                campiModificati,
+                operazioneCompleta,
+                messaggio
+        );
+    }
+
+    public List<TavoliDTO> getAllTavoliAttivi() {
+        List<TavoliEntity> entities = tavoliRepository.findAll();
+
         return entities.stream()
                 .map(tavoliMapper::simpleEntityToDto)
                 .toList();

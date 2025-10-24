@@ -3,6 +3,7 @@ package it.paoloadesso.gestionalesala.mapper;
 import it.paoloadesso.gestionalesala.dto.CreaProdottiDTO;
 import it.paoloadesso.gestionalesala.dto.ProdottiConDettaglioDeleteDTO;
 import it.paoloadesso.gestionalesala.dto.ProdottiDTO;
+import it.paoloadesso.gestionalesala.dto.RisultatoModificaProdottoDTO;
 import it.paoloadesso.gestionalesala.entities.ProdottiEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -24,4 +25,7 @@ public interface ProdottiMapper {
 
     @Mapping(source = "id", target = "idProdotto")
     ProdottiConDettaglioDeleteDTO prodottiEntityToProdottiConDettaglioDeleteDto(ProdottiEntity prodottiEntity);
+
+    @Mapping(source = "id", target = "prodotto.idProdotto")
+    RisultatoModificaProdottoDTO prodottiEntityToRisultatoModificaProdottoDto(ProdottiEntity prodottiEntity);
 }

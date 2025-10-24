@@ -3,9 +3,7 @@ package it.paoloadesso.gestionalesala.controllers;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import it.paoloadesso.gestionalesala.dto.CreaProdottiDTO;
-import it.paoloadesso.gestionalesala.dto.ProdottiConDettaglioDeleteDTO;
-import it.paoloadesso.gestionalesala.dto.ProdottiDTO;
+import it.paoloadesso.gestionalesala.dto.*;
 import it.paoloadesso.gestionalesala.services.ProdottiService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -119,6 +117,20 @@ public class ProdottiController {
                     example = "Primi")
             @RequestParam @NotBlank String nomeCategoria) {
         return ResponseEntity.ok(prodottiService.getProdottiByContainingCategoria(nomeCategoria));
+    }
+
+    @Operation(
+            summary = "Modifica un prodotto esistente",
+            description = "Aggiorna i dati di un prodotto del menu con risultato dettagliato. " +
+                    "Supporta modifiche parziali e fornisce informazioni sui campi effettivamente modificati."
+    )
+    @PutMapping("/{prodottoId}")
+    public ResponseEntity<RisultatoModificaProdottoDTO> modificaProdotto(
+            @PathVariable @Positive Long prodottoId,
+            @RequestBody @Valid ModificaProdottoRequestDTO modificaDto) {
+
+        RisultatoModificaProdottoDTO risultato = prodottiService.modificaProdotto(prodottoId, modificaDto);
+        return ResponseEntity.ok(risultato);
     }
 
     @Operation(

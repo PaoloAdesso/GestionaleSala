@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import it.paoloadesso.gestionalesala.dto.AnnullaPagamentoRisultatoDTO;
 import it.paoloadesso.gestionalesala.dto.PagamentoRisultatoDTO;
-import it.paoloadesso.gestionalesala.services.PagamentoService;
+import it.paoloadesso.gestionalesala.services.PagamentiService;
 import jakarta.validation.constraints.Positive;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -15,12 +15,12 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/pagamenti")
 @Validated
 @Tag(name = "Gestione Pagamenti", description = "API per gestire i pagamenti di prodotti e ordini completi")
-public class PagamentoController {
+public class PagamentiController {
 
-    private final PagamentoService pagamentoService;
+    private final PagamentiService pagamentiService;
 
-    public PagamentoController(PagamentoService pagamentoService) {
-        this.pagamentoService = pagamentoService;
+    public PagamentiController(PagamentiService pagamentiService) {
+        this.pagamentiService = pagamentiService;
     }
 
     @Operation(
@@ -34,7 +34,7 @@ public class PagamentoController {
             @PathVariable @Positive Long idOrdine,
             @PathVariable @Positive Long idProdotto) {
 
-        pagamentoService.pagaProdottoInOrdine(idOrdine, idProdotto);
+        pagamentiService.pagaProdottoInOrdine(idOrdine, idProdotto);
         return ResponseEntity.ok("Prodotto pagato con successo");
     }
 
@@ -49,7 +49,7 @@ public class PagamentoController {
             @PathVariable @Positive Long idOrdine,
             @PathVariable @Positive Long idProdotto) {
 
-        pagamentoService.annullaPagamentoProdottoInOrdine(idOrdine, idProdotto);
+        pagamentiService.annullaPagamentoProdottoInOrdine(idOrdine, idProdotto);
         return ResponseEntity.ok("Pagamento prodotto annullato con successo");
     }
 
@@ -68,7 +68,7 @@ public class PagamentoController {
             @RequestParam(defaultValue = "false") boolean chiudiOrdine) {
 
         return ResponseEntity.ok(
-                pagamentoService.pagaTuttoEChiudiSeRichiesto(idOrdine, chiudiOrdine)
+                pagamentiService.pagaTuttoEChiudiSeRichiesto(idOrdine, chiudiOrdine)
         );
     }
 
@@ -83,7 +83,7 @@ public class PagamentoController {
     public ResponseEntity<AnnullaPagamentoRisultatoDTO> annullaTutto(
             @PathVariable @Positive Long idOrdine) {
 
-        AnnullaPagamentoRisultatoDTO risultato = pagamentoService.annullaPagamentoTuttoOrdine(idOrdine);
+        AnnullaPagamentoRisultatoDTO risultato = pagamentiService.annullaPagamentoTuttoOrdine(idOrdine);
         return ResponseEntity.ok(risultato);
     }
 }
