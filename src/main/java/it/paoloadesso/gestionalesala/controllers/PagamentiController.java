@@ -7,6 +7,8 @@ import it.paoloadesso.gestionalesala.dto.AnnullaPagamentoRisultatoDTO;
 import it.paoloadesso.gestionalesala.dto.PagamentoRisultatoDTO;
 import it.paoloadesso.gestionalesala.services.PagamentiService;
 import jakarta.validation.constraints.Positive;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +18,8 @@ import org.springframework.web.bind.annotation.*;
 @Validated
 @Tag(name = "Gestione Pagamenti", description = "API per gestire i pagamenti di prodotti e ordini completi")
 public class PagamentiController {
+
+    private static final Logger log = LoggerFactory.getLogger(PagamentiController.class);
 
     private final PagamentiService pagamentiService;
 
@@ -34,7 +38,9 @@ public class PagamentiController {
             @PathVariable @Positive Long idOrdine,
             @PathVariable @Positive Long idProdotto) {
 
+        log.info("Richiesta pagamento singolo - Ordine: {}, Prodotto: {}", idOrdine, idProdotto);
         pagamentiService.pagaProdottoInOrdine(idOrdine, idProdotto);
+        log.info("Pagamento completato - Ordine: {}, Prodotto: {}", idOrdine, idProdotto);
         return ResponseEntity.ok("Prodotto pagato con successo");
     }
 
@@ -49,7 +55,9 @@ public class PagamentiController {
             @PathVariable @Positive Long idOrdine,
             @PathVariable @Positive Long idProdotto) {
 
+        log.info("Richiesta annullamento pagamento - Ordine: {}, Prodotto: {}", idOrdine, idProdotto);
         pagamentiService.annullaPagamentoProdottoInOrdine(idOrdine, idProdotto);
+        log.info("Annullamento pagamento completato - Ordine: {}, Prodotto: {}", idOrdine, idProdotto);
         return ResponseEntity.ok("Pagamento prodotto annullato con successo");
     }
 
@@ -67,9 +75,11 @@ public class PagamentiController {
                     example = "true")
             @RequestParam(defaultValue = "false") boolean chiudiOrdine) {
 
-        return ResponseEntity.ok(
-                pagamentiService.pagaTuttoEChiudiSeRichiesto(idOrdine, chiudiOrdine)
-        );
+        log.info("Richiesta pagamento totale - Ordine: {}, chiudiOrdine: {}", idOrdine, chiudiOrdine);
+        PagamentoRisultatoDTO risultato = pagamentiService.pagaTuttoEChiudiSeRichiesto(idOrdine, chiudiOrdine);
+        log.info("Pagamento totale completato - Ordine: {}, Importo: €{}, Chiuso: {}",
+                idOrdine, risultato.getTotalePagato(), chiudiOrdine);
+        return ResponseEntity.ok(risultato);
     }
 
     @Operation(
@@ -83,7 +93,11 @@ public class PagamentiController {
     public ResponseEntity<AnnullaPagamentoRisultatoDTO> annullaTutto(
             @PathVariable @Positive Long idOrdine) {
 
+        log.info("Richiesta annullamento pagamenti totali - Ordine: {}", idOrdine);
         AnnullaPagamentoRisultatoDTO risultato = pagamentiService.annullaPagamentoTuttoOrdine(idOrdine);
+        log.info("Annullamento pagamenti totali completato - Ordine: {}, Tipi prodotto: {}, Pezzi: {}, Importo: €{}",
+                idOrdine, risultato.getQuantitaProdottiNonPagati(), risultato.getTotalePezziNonPagati(),
+                risultato.getTotalePagamentiAnnullati());
         return ResponseEntity.ok(risultato);
     }
 }

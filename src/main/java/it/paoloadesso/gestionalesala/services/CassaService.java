@@ -1,9 +1,18 @@
 package it.paoloadesso.gestionalesala.services;
 
-import it.paoloadesso.gestionalesala.dto.*;
-import it.paoloadesso.gestionalesala.entities.*;
-import it.paoloadesso.gestionalesala.enums.*;
-import it.paoloadesso.gestionalesala.repositories.*;
+import it.paoloadesso.gestionalesala.dto.OrdineConProdottiDTO;
+import it.paoloadesso.gestionalesala.dto.ProdottoNonPagatoDTO;
+import it.paoloadesso.gestionalesala.dto.TavoloApertoConDettagliOrdineDTO;
+import it.paoloadesso.gestionalesala.dto.TavoloApertoDTO;
+import it.paoloadesso.gestionalesala.entities.OrdiniEntity;
+import it.paoloadesso.gestionalesala.entities.OrdiniProdottiEntity;
+import it.paoloadesso.gestionalesala.entities.TavoliEntity;
+import it.paoloadesso.gestionalesala.enums.StatoOrdine;
+import it.paoloadesso.gestionalesala.enums.StatoPagato;
+import it.paoloadesso.gestionalesala.repositories.OrdiniProdottiRepository;
+import it.paoloadesso.gestionalesala.repositories.OrdiniRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -13,6 +22,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class CassaService {
+
+    private static final Logger log = LoggerFactory.getLogger(CassaService.class);
 
     private final OrdiniRepository ordiniRepository;
     private final OrdiniProdottiRepository ordiniProdottiRepository;
@@ -30,6 +41,8 @@ public class CassaService {
      * solo i tavoli che hanno almeno un prodotto non pagato in un ordine aperto.
      */
     public List<TavoloApertoDTO> getTavoliAperti() {
+        log.debug("Richiesta tavoli aperti per cassa");
+
         // Prendo tutti gli ordini non chiusi
         List<OrdiniEntity> tavoliAperti = ordiniRepository.findByStatoOrdineNot(StatoOrdine.CHIUSO);
 
@@ -46,10 +59,13 @@ public class CassaService {
                 ))
                 .toList();
 
+        log.info("Trovati {} tavoli aperti con prodotti da pagare", tavoliApertiDto.size());
         return tavoliApertiDto;
     }
 
     public List<TavoloApertoConDettagliOrdineDTO> getTavoliApertiConDettagliOrdini() {
+        log.debug("Richiesta tavoli aperti con dettagli ordini per cassa");
+
         // Creo una mappa tavolo → ordini filtrando quelli con prodotti non pagati
         Map<TavoliEntity, List<OrdiniEntity>> ordiniPerTavolo = ordiniRepository.findByStatoOrdineNot(StatoOrdine.CHIUSO).stream()
                 .filter(ordine -> !ordiniProdottiRepository
@@ -73,6 +89,8 @@ public class CassaService {
                             .map(OrdineConProdottiDTO::getTotaleOrdine)
                             .reduce(BigDecimal.ZERO, BigDecimal::add);
 
+                    log.debug("Tavolo {} - Totale: €{}", tavolo.getNumeroNomeTavolo(), totaleTavolo);
+
                     return new TavoloApertoConDettagliOrdineDTO(
                             tavolo.getId(),
                             tavolo.getNumeroNomeTavolo(),
@@ -82,6 +100,7 @@ public class CassaService {
                 })
                 .toList();
 
+        log.info("Generati dettagli per {} tavoli aperti", listaDto.size());
         return listaDto;
     }
 
@@ -96,7 +115,7 @@ public class CassaService {
     }
 
     private OrdineConProdottiDTO creaOrdineConProdotti(OrdiniEntity ordine) {
-        // Prendo tutti i prodotti non pagati dell’ordine
+        // Prendo tutti i prodotti non pagati dell'ordine
         List<OrdiniProdottiEntity> prodottiNonPagati = ordiniProdottiRepository.findByOrdineAndStatoPagato(ordine, StatoPagato.NON_PAGATO);
 
         // Li trasformo in DTO
@@ -104,7 +123,7 @@ public class CassaService {
                 .map(this::creaProdottoNonPagato)
                 .toList();
 
-        // Calcolo il totale dell’ordine sommando tutti i subtotali dei prodotti
+        // Calcolo il totale dell'ordine sommando tutti i subtotali dei prodotti
         BigDecimal totaleOrdine = prodottiDto.stream()
                 .map(ProdottoNonPagatoDTO::getSubtotale)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);

@@ -8,6 +8,8 @@ import it.paoloadesso.gestionalesala.services.ProdottiService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +23,8 @@ import java.util.List;
 @Validated
 @Tag(name = "Gestione Prodotti", description = "API per gestire il menu del ristorante: prodotti attivi, eliminati e categorie")
 public class ProdottiController {
+
+    private static final Logger log = LoggerFactory.getLogger(ProdottiController.class);
 
     private final ProdottiService prodottiService;
 
@@ -36,6 +40,7 @@ public class ProdottiController {
     )
     @PostMapping
     public ResponseEntity<ProdottiDTO> creaProdotto(@RequestBody @Valid CreaProdottiDTO prodotto) {
+        log.info("Richiesta creazione prodotto: {}", prodotto.getNome());
         ProdottiDTO nuovoProdotto = prodottiService.creaProdotto(prodotto);
 
         URI location = ServletUriComponentsBuilder
@@ -44,6 +49,7 @@ public class ProdottiController {
                 .buildAndExpand(nuovoProdotto.getIdProdotto())
                 .toUri();
 
+        log.info("Prodotto creato con successo - ID: {}, Nome: {}", nuovoProdotto.getIdProdotto(), nuovoProdotto.getNome());
         return ResponseEntity.created(location).body(nuovoProdotto);
     }
 
@@ -55,7 +61,10 @@ public class ProdottiController {
     )
     @GetMapping
     public ResponseEntity<List<ProdottiDTO>> getAllProdotti() {
-        return ResponseEntity.ok(prodottiService.getAllProdotti());
+        log.debug("Richiesta tutti i prodotti attivi");
+        List<ProdottiDTO> prodotti = prodottiService.getAllProdotti();
+        log.info("Restituiti {} prodotti attivi", prodotti.size());
+        return ResponseEntity.ok(prodotti);
     }
 
     @Operation(
@@ -66,7 +75,10 @@ public class ProdottiController {
     )
     @GetMapping("/eliminati")
     public ResponseEntity<List<ProdottiDTO>> getAllProdottiEliminati() {
-        return ResponseEntity.ok(prodottiService.getAllProdottiEliminati());
+        log.debug("Richiesta prodotti eliminati");
+        List<ProdottiDTO> prodottiEliminati = prodottiService.getAllProdottiEliminati();
+        log.info("Restituiti {} prodotti eliminati", prodottiEliminati.size());
+        return ResponseEntity.ok(prodottiEliminati);
     }
 
     @Operation(
@@ -76,7 +88,10 @@ public class ProdottiController {
     )
     @GetMapping("/categorie")
     public ResponseEntity<List<String>> getAllCategorie() {
-        return ResponseEntity.ok(prodottiService.getAllCategorie());
+        log.debug("Richiesta tutte le categorie");
+        List<String> categorie = prodottiService.getAllCategorie();
+        log.info("Restituite {} categorie", categorie.size());
+        return ResponseEntity.ok(categorie);
     }
 
     @Operation(
@@ -90,7 +105,10 @@ public class ProdottiController {
             @Parameter(description = "Parte del nome del prodotto da cercare (case-insensitive)",
                     example = "pizza")
             @RequestParam @NotBlank String nomeProdotto) {
-        return ResponseEntity.ok(prodottiService.getProdottiByContainingNome(nomeProdotto));
+        log.debug("Ricerca prodotti per nome: {}", nomeProdotto);
+        List<ProdottiDTO> prodotti = prodottiService.getProdottiByContainingNome(nomeProdotto);
+        log.info("Trovati {} prodotti contenenti '{}'", prodotti.size(), nomeProdotto);
+        return ResponseEntity.ok(prodotti);
     }
 
     @Operation(
@@ -102,7 +120,10 @@ public class ProdottiController {
             @Parameter(description = "Parte del nome del prodotto da cercare (case-insensitive)", example = "pizza")
             @RequestParam @NotBlank String nomeProdotto
     ) {
-        return ResponseEntity.ok(prodottiService.getTuttiProdottiAttiviEdEliminatiByContainingNome(nomeProdotto));
+        log.debug("Ricerca prodotti (attivi + eliminati) per nome: {}", nomeProdotto);
+        List<ProdottiConDettaglioDeleteDTO> prodotti = prodottiService.getTuttiProdottiAttiviEdEliminatiByContainingNome(nomeProdotto);
+        log.info("Trovati {} prodotti (attivi + eliminati) contenenti '{}'", prodotti.size(), nomeProdotto);
+        return ResponseEntity.ok(prodotti);
     }
 
     @Operation(
@@ -116,7 +137,10 @@ public class ProdottiController {
             @Parameter(description = "Nome della categoria da filtrare (case-insensitive)",
                     example = "Primi")
             @RequestParam @NotBlank String nomeCategoria) {
-        return ResponseEntity.ok(prodottiService.getProdottiByContainingCategoria(nomeCategoria));
+        log.debug("Ricerca prodotti per categoria: {}", nomeCategoria);
+        List<ProdottiDTO> prodotti = prodottiService.getProdottiByContainingCategoria(nomeCategoria);
+        log.info("Trovati {} prodotti nella categoria '{}'", prodotti.size(), nomeCategoria);
+        return ResponseEntity.ok(prodotti);
     }
 
     @Operation(
@@ -129,7 +153,9 @@ public class ProdottiController {
             @PathVariable @Positive Long prodottoId,
             @RequestBody @Valid ModificaProdottoRequestDTO modificaDto) {
 
+        log.info("Richiesta modifica prodotto ID: {}", prodottoId);
         RisultatoModificaProdottoDTO risultato = prodottiService.modificaProdotto(prodottoId, modificaDto);
+        log.info("Prodotto ID {} modificato - {}", prodottoId, risultato.getMessaggio());
         return ResponseEntity.ok(risultato);
     }
 
@@ -141,7 +167,10 @@ public class ProdottiController {
     )
     @PatchMapping("/{prodottoId}/ripristina")
     public ResponseEntity<ProdottiConDettaglioDeleteDTO> ripristinaSingoloProdotto(@PathVariable @Positive Long prodottoId) {
-        return ResponseEntity.ok(prodottiService.ripristinaSingoloProdotto(prodottoId));
+        log.info("Richiesta ripristino prodotto ID: {}", prodottoId);
+        ProdottiConDettaglioDeleteDTO prodotto = prodottiService.ripristinaSingoloProdotto(prodottoId);
+        log.info("Prodotto ID {} ripristinato con successo", prodottoId);
+        return ResponseEntity.ok(prodotto);
     }
 
     @Operation(
@@ -153,8 +182,9 @@ public class ProdottiController {
     )
     @DeleteMapping("{prodottoId}")
     public ResponseEntity<Void> eliminaSingoloProdotto(@PathVariable @Positive Long prodottoId){
+        log.info("Richiesta eliminazione prodotto ID: {}", prodottoId);
         prodottiService.deleteProdotto(prodottoId);
+        log.info("Prodotto ID {} eliminato con successo (soft delete)", prodottoId);
         return ResponseEntity.noContent().build();
     }
 }
-

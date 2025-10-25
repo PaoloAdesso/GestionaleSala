@@ -41,6 +41,7 @@ public class OrdiniController {
     )
     @PostMapping
     public ResponseEntity<OrdiniDTO> creaOrdine(@RequestBody @Valid CreaOrdiniDTO ordine) {
+        log.info("Richiesta creazione ordine per tavolo: {}", ordine.getIdTavolo());
         OrdiniDTO nuovoOrdine = ordiniService.creaOrdine(ordine);
 
         URI location = ServletUriComponentsBuilder
@@ -49,6 +50,7 @@ public class OrdiniController {
                 .buildAndExpand(nuovoOrdine.getIdOrdine())
                 .toUri();
 
+        log.info("Ordine creato con successo - ID: {} per tavolo {}", nuovoOrdine.getIdOrdine(), nuovoOrdine.getIdTavolo());
         return ResponseEntity.created(location).body(nuovoOrdine);
     }
 
@@ -59,7 +61,10 @@ public class OrdiniController {
     )
     @GetMapping
     public ResponseEntity<List<OrdiniDTO>> getListaTuttiOrdiniAperti() {
-        return ResponseEntity.ok(ordiniService.getListaTuttiOrdiniAperti());
+        log.debug("Richiesta tutti gli ordini aperti");
+        List<OrdiniDTO> ordini = ordiniService.getListaTuttiOrdiniAperti();
+        log.info("Restituiti {} ordini aperti", ordini.size());
+        return ResponseEntity.ok(ordini);
     }
 
     @Operation(
@@ -71,7 +76,10 @@ public class OrdiniController {
     )
     @GetMapping("/oggi")
     public ResponseEntity<List<OrdiniDTO>> getOrdiniDiOggi() {
-        return ResponseEntity.ok(ordiniService.getOrdiniDiOggi());
+        log.debug("Richiesta ordini di oggi lavorativo");
+        List<OrdiniDTO> ordini = ordiniService.getOrdiniDiOggi();
+        log.info("Restituiti {} ordini di oggi", ordini.size());
+        return ResponseEntity.ok(ordini);
     }
 
     @Operation(
@@ -81,7 +89,9 @@ public class OrdiniController {
     )
     @GetMapping("/tavolo/{idTavolo}")
     public ResponseEntity<List<OrdiniDTO>> getListaOrdiniApertiPerTavolo(@PathVariable @Positive Long idTavolo) {
+        log.debug("Richiesta ordini aperti per tavolo: {}", idTavolo);
         List<OrdiniDTO> listaOrdini = ordiniService.getListaOrdiniApertiByTavolo(idTavolo);
+        log.info("Restituiti {} ordini aperti per tavolo {}", listaOrdini.size(), idTavolo);
         return ResponseEntity.ok(listaOrdini);
     }
 
@@ -95,7 +105,10 @@ public class OrdiniController {
     @GetMapping("/tavolo/{idTavolo}/oggi")
     public ResponseEntity<List<OrdiniDTO>> getOrdiniDiOggiPerTavolo(
             @PathVariable @Positive Long idTavolo) {
-        return ResponseEntity.ok(ordiniService.getOrdiniOggiByTavolo(idTavolo));
+        log.debug("Richiesta ordini di oggi per tavolo: {}", idTavolo);
+        List<OrdiniDTO> ordini = ordiniService.getOrdiniOggiByTavolo(idTavolo);
+        log.info("Restituiti {} ordini di oggi per tavolo {}", ordini.size(), idTavolo);
+        return ResponseEntity.ok(ordini);
     }
 
     @Operation(
@@ -107,7 +120,10 @@ public class OrdiniController {
     @GetMapping("/tavolo/{idTavolo}/dettagli")
     public ResponseEntity<List<ListaOrdiniEProdottiByTavoloResponseDTO>> getDettagliOrdiniPerTavolo
             (@PathVariable @Positive Long idTavolo) {
-        return ResponseEntity.ok(ordiniService.getDettaglioOrdineByIdTavolo(idTavolo));
+        log.debug("Richiesta dettagli ordini per tavolo: {}", idTavolo);
+        List<ListaOrdiniEProdottiByTavoloResponseDTO> dettagli = ordiniService.getDettaglioOrdineByIdTavolo(idTavolo);
+        log.info("Restituiti dettagli per {} ordini del tavolo {}", dettagli.size(), idTavolo);
+        return ResponseEntity.ok(dettagli);
     }
 
     @Operation(
@@ -120,7 +136,10 @@ public class OrdiniController {
     @GetMapping("/tavolo/{idTavolo}/dettagli/oggi")
     public ResponseEntity<List<ListaOrdiniEProdottiByTavoloResponseDTO>> getDettagliOrdiniOggiPerTavolo
             (@PathVariable @Positive Long idTavolo) {
-        return ResponseEntity.ok(ordiniService.getDettaglioOrdineDiOggiByIdTavolo(idTavolo));
+        log.debug("Richiesta dettagli ordini di oggi per tavolo: {}", idTavolo);
+        List<ListaOrdiniEProdottiByTavoloResponseDTO> dettagli = ordiniService.getDettaglioOrdineDiOggiByIdTavolo(idTavolo);
+        log.info("Restituiti dettagli per {} ordini di oggi del tavolo {}", dettagli.size(), idTavolo);
+        return ResponseEntity.ok(dettagli);
     }
 
     @Operation(
@@ -131,7 +150,10 @@ public class OrdiniController {
     )
     @GetMapping("/chiusi")
     public ResponseEntity<List<TavoloConOrdiniChiusiDTO>> getOrdiniChiusi() {
-        return ResponseEntity.ok(ordiniService.getOrdiniChiusi());
+        log.debug("Richiesta tutti gli ordini chiusi");
+        List<TavoloConOrdiniChiusiDTO> ordiniChiusi = ordiniService.getOrdiniChiusi();
+        log.info("Restituiti {} ordini chiusi", ordiniChiusi.size());
+        return ResponseEntity.ok(ordiniChiusi);
     }
 
     @Operation(
@@ -143,7 +165,10 @@ public class OrdiniController {
     )
     @GetMapping("/chiusi-oggi")
     public ResponseEntity<List<TavoloConOrdiniChiusiDTO>> getOrdiniChiusiDiOggi() {
-        return ResponseEntity.ok(ordiniService.getOrdiniChiusiDiOggiLavorativo());
+        log.debug("Richiesta ordini chiusi di oggi");
+        List<TavoloConOrdiniChiusiDTO> ordiniChiusiOggi = ordiniService.getOrdiniChiusiDiOggiLavorativo();
+        log.info("Restituiti {} ordini chiusi di oggi", ordiniChiusiOggi.size());
+        return ResponseEntity.ok(ordiniChiusiOggi);
     }
 
     @Operation(
@@ -154,7 +179,10 @@ public class OrdiniController {
     )
     @GetMapping("/eliminati")
     public ResponseEntity<List<OrdiniDTO>> getAllOrdiniEliminati() {
-        return ResponseEntity.ok(ordiniService.getAllOrdiniEliminati());
+        log.debug("Richiesta ordini eliminati");
+        List<OrdiniDTO> ordiniEliminati = ordiniService.getAllOrdiniEliminati();
+        log.info("Restituiti {} ordini eliminati", ordiniEliminati.size());
+        return ResponseEntity.ok(ordiniEliminati);
     }
 
     @Operation(
@@ -171,7 +199,10 @@ public class OrdiniController {
             @PathVariable Long idOrdine,
             @Valid @RequestBody ModificaOrdineRequestDTO requestDto) {
 
+        log.info("Richiesta modifica ordine: {}", idOrdine);
         RisultatoModificaOrdineDTO risultato = ordiniService.modificaOrdine(idOrdine, requestDto);
+
+        log.info("Modifica ordine {} completata - {}", idOrdine, risultato.getMessaggio());
 
         if (risultato.isOperazioneCompleta()) {
             return ResponseEntity.ok(risultato);
@@ -195,7 +226,9 @@ public class OrdiniController {
             @PathVariable @Positive Long idOrdine,
             @RequestBody @Valid ModificaStatoOrdineRequestDTO request) {
 
+        log.info("Richiesta modifica stato ordine {} -> {}", idOrdine, request.getNuovoStato());
         RisultatoModificaStatoOrdineDTO risultato = ordiniService.modificaStatoOrdine(idOrdine, request);
+        log.info("Stato ordine {} modificato con successo", idOrdine);
         return ResponseEntity.ok(risultato);
     }
 
@@ -209,7 +242,10 @@ public class OrdiniController {
     @PostMapping("/chiudi/{idOrdine}")
     public ResponseEntity<StatoOrdineETavoloResponseDTO> chiudiOrdine(
             @PathVariable @Positive Long idOrdine) {
-        return ResponseEntity.ok(ordiniService.chiudiOrdine(idOrdine));
+        log.info("Richiesta chiusura ordine: {}", idOrdine);
+        StatoOrdineETavoloResponseDTO risultato = ordiniService.chiudiOrdine(idOrdine);
+        log.info("Ordine {} chiuso con successo", idOrdine);
+        return ResponseEntity.ok(risultato);
     }
 
     @Operation(
@@ -221,7 +257,10 @@ public class OrdiniController {
     )
     @PatchMapping("/{ordineId}/ripristina")
     public ResponseEntity<OrdiniDTO> ripristinaSingoloProdotto(@PathVariable @Positive Long ordineId) {
-        return ResponseEntity.ok(ordiniService.ripristinaOrdine(ordineId));
+        log.info("Richiesta ripristino ordine: {}", ordineId);
+        OrdiniDTO ordine = ordiniService.ripristinaOrdine(ordineId);
+        log.info("Ordine {} ripristinato con successo", ordineId);
+        return ResponseEntity.ok(ordine);
     }
 
     @Operation(
@@ -232,7 +271,9 @@ public class OrdiniController {
     )
     @DeleteMapping("/{idOrdine}")
     public ResponseEntity<Void> deleteOrdine(@PathVariable @Positive Long idOrdine){
+        log.info("Richiesta eliminazione ordine: {}", idOrdine);
         ordiniService.eliminaOrdine(idOrdine);
+        log.info("Ordine {} eliminato con successo (soft delete)", idOrdine);
         return ResponseEntity.noContent().build();
     }
 
@@ -242,7 +283,9 @@ public class OrdiniController {
                     " Operazione irreversibile."    )
     @DeleteMapping("/hard-delete/{idOrdine}")
     public ResponseEntity<Void> hardDeleteOrdine(@PathVariable @Positive Long idOrdine){
+        log.warn("Richiesta eliminazione DEFINITIVA ordine: {}", idOrdine);
         ordiniService.eliminaFisicamenteOrdine(idOrdine);
+        log.warn("Ordine {} eliminato DEFINITIVAMENTE (hard delete)", idOrdine);
         return ResponseEntity.noContent().build();
     }
 
@@ -252,6 +295,7 @@ public class OrdiniController {
                     " Operazione irreversibile."    )
     @DeleteMapping("/hard-delete-ordini-settimana-precedente")
     public ResponseEntity<Void> hardDeleteOrdiniSettimanaPrecedente(){
+        log.warn("Richiesta eliminazione DEFINITIVA ordini settimana precedente");
         ordiniService.eliminaOrdiniSettimanaPrecedente();
         log.info("Effettuata eliminazione manuale degli ordini della settimana precedente");
         return ResponseEntity.noContent().build();
@@ -262,6 +306,7 @@ public class OrdiniController {
             description = "Elimina gli ordini ed i relativi prodotti ordinati collegati del giorno precedente")
     @DeleteMapping("/soft-delete-ordini-giorno-precedente")
     public ResponseEntity<Void> hardDeleteOrdiniVecchi(){
+        log.info("Richiesta eliminazione soft ordini giorno precedente");
         ordiniService.eliminaOrdiniGiornoPrecedente();
         log.info("Effettuata eliminazione manuale degli ordini di ieri (soft-delete)");
         return ResponseEntity.noContent().build();

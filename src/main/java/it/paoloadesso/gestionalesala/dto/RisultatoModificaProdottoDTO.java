@@ -6,16 +6,16 @@ public class RisultatoModificaProdottoDTO {
 
     private ProdottiDTO prodotto;
     private List<String> campiModificati;
-    private boolean operazioneCompleta;
+    private boolean operazioneCompletata;
     private String messaggio;
 
     public RisultatoModificaProdottoDTO() {
     }
 
-    public RisultatoModificaProdottoDTO(ProdottiDTO prodotto, List<String> campiModificati, boolean operazioneCompleta, String messaggio) {
+    public RisultatoModificaProdottoDTO(ProdottiDTO prodotto, List<String> campiModificati, boolean operazioneCompletata, String messaggio) {
         this.prodotto = prodotto;
         this.campiModificati = campiModificati;
-        this.operazioneCompleta = operazioneCompleta;
+        this.operazioneCompletata = operazioneCompletata;
         this.messaggio = messaggio;
     }
 
@@ -35,12 +35,12 @@ public class RisultatoModificaProdottoDTO {
         this.campiModificati = campiModificati;
     }
 
-    public boolean isOperazioneCompleta() {
-        return operazioneCompleta;
+    public boolean isOperazioneCompletata() {
+        return operazioneCompletata;
     }
 
-    public void setOperazioneCompleta(boolean operazioneCompleta) {
-        this.operazioneCompleta = operazioneCompleta;
+    public void setOperazioneCompletata(boolean operazioneCompletata) {
+        this.operazioneCompletata = operazioneCompletata;
     }
 
     public String getMessaggio() {
@@ -55,7 +55,7 @@ public class RisultatoModificaProdottoDTO {
     public String toString() {
         return "RisultatoModificaProdottoDTO{" +
                 ", campiModificati=" + campiModificati +
-                ", operazioneCompleta=" + operazioneCompleta +
+                ", operazioneCompleta=" + operazioneCompletata +
                 ", messaggio='" + messaggio + '\'' +
                 '}';
     }

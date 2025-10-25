@@ -4,7 +4,7 @@ Obiettivo: generare messaggi di commit chiari e strutturati come “Oggetto + se
 
 ## 1) Struttura del messaggio
 
-- Oggetto (prima riga): riassunto conciso in italiano, tempo presente/imperativo, massimo ~70 caratteri.
+- Oggetto (prima riga): riassunto conciso in italiano, participio passato, massimo ~70 caratteri.
 - Riga vuota.
 - Corpo: sezioni con titoli Markdown `###` e liste puntate `-` molto specifiche.
 

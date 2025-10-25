@@ -7,6 +7,8 @@ import it.paoloadesso.gestionalesala.services.CassaService;
 import it.paoloadesso.gestionalesala.services.TavoliService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +20,8 @@ import java.util.List;
 @Validated
 @Tag(name = "Gestione Tavoli", description = "API per la gestione dei tavoli")
 public class TavoliController {
+
+    private static final Logger log = LoggerFactory.getLogger(TavoliController.class);
 
     private final CassaService cassaService;
     private final TavoliService tavoliService;
@@ -34,7 +38,10 @@ public class TavoliController {
     )
     @GetMapping("/tavoli-aperti")
     public ResponseEntity<List<TavoloApertoDTO>> getTavoliAperti() {
-        return ResponseEntity.ok(cassaService.getTavoliAperti());
+        log.debug("Richiesta tavoli aperti");
+        List<TavoloApertoDTO> tavoli = cassaService.getTavoliAperti();
+        log.info("Restituiti {} tavoli aperti", tavoli.size());
+        return ResponseEntity.ok(tavoli);
     }
 
     @Operation(
@@ -45,7 +52,10 @@ public class TavoliController {
     )
     @GetMapping("/dettaglio-tavoli-aperti")
     public ResponseEntity<List<TavoloApertoConDettagliOrdineDTO>> getTavoliApertiConDettagliOrdini() {
-        return ResponseEntity.ok(cassaService.getTavoliApertiConDettagliOrdini());
+        log.debug("Richiesta dettagli tavoli aperti");
+        List<TavoloApertoConDettagliOrdineDTO> dettagli = cassaService.getTavoliApertiConDettagliOrdini();
+        log.info("Restituiti dettagli per {} tavoli aperti", dettagli.size());
+        return ResponseEntity.ok(dettagli);
     }
 
     @Operation(
@@ -56,7 +66,10 @@ public class TavoliController {
     )
     @GetMapping("/eliminati")
     public ResponseEntity<List<TavoliDTO>> getAllTavoliEliminati() {
-        return ResponseEntity.ok(tavoliService.getAllTavoliEliminati());
+        log.debug("Richiesta tavoli eliminati");
+        List<TavoliDTO> tavoliEliminati = tavoliService.getAllTavoliEliminati();
+        log.info("Restituiti {} tavoli eliminati", tavoliEliminati.size());
+        return ResponseEntity.ok(tavoliEliminati);
     }
 
     @Operation(
@@ -67,7 +80,10 @@ public class TavoliController {
     )
     @GetMapping("/attivi")
     public ResponseEntity<List<TavoliDTO>> getAllTavoliAttivi() {
-        return ResponseEntity.ok(tavoliService.getAllTavoliAttivi());
+        log.debug("Richiesta tavoli attivi");
+        List<TavoliDTO> tavoliAttivi = tavoliService.getAllTavoliAttivi();
+        log.info("Restituiti {} tavoli attivi", tavoliAttivi.size());
+        return ResponseEntity.ok(tavoliAttivi);
     }
 
     @Operation(
@@ -79,7 +95,9 @@ public class TavoliController {
     )
     @PatchMapping("/libera-tutti-i-tavoli")
     public ResponseEntity<String> liberaTuttiITavoli() {
+        log.info("Richiesta liberazione manuale di tutti i tavoli");
         tavoliService.liberaTuttiITavoli();
+        log.info("Tutti i tavoli sono stati liberati manualmente");
         return ResponseEntity.ok("Lo stato di tutti i tavoli è stato reimpostato a «LIBERO».");
     }
 
@@ -89,7 +107,10 @@ public class TavoliController {
     )
     @PatchMapping("/{idTavolo}/ripristina")
     public ResponseEntity<TavoliConDettaglioDeleteDTO> ripristinaSingoloTavolo(@PathVariable @Positive Long idTavolo) {
-        return ResponseEntity.ok(tavoliService.ripristinaSingoloTavolo(idTavolo));
+        log.info("Richiesta ripristino tavolo ID: {}", idTavolo);
+        TavoliConDettaglioDeleteDTO tavolo = tavoliService.ripristinaSingoloTavolo(idTavolo);
+        log.info("Tavolo ID {} ripristinato con successo", idTavolo);
+        return ResponseEntity.ok(tavolo);
     }
 
     @Operation(
@@ -98,7 +119,9 @@ public class TavoliController {
     )
     @DeleteMapping("/{idTavolo}")
     public ResponseEntity<Void> deleteTavolo(@PathVariable Long idTavolo){
+        log.info("Richiesta eliminazione tavolo ID: {}", idTavolo);
         tavoliService.eliminaTavoloByIdERelativiOrdiniCollegati(idTavolo);
+        log.info("Tavolo ID {} eliminato con successo (soft delete)", idTavolo);
         return ResponseEntity.noContent().build();
     }
 
@@ -110,7 +133,9 @@ public class TavoliController {
     )
     @DeleteMapping("/hard-delete/{idTavolo}")
     public ResponseEntity<Void> hardDeleteTavolo(@PathVariable Long idTavolo){
+        log.warn("Richiesta eliminazione DEFINITIVA tavolo ID: {}", idTavolo);
         tavoliService.eliminaFisicamenteTavoloByIdERelativiOrdiniCollegati(idTavolo);
+        log.warn("Tavolo ID {} eliminato DEFINITIVAMENTE (hard delete)", idTavolo);
         return ResponseEntity.noContent().build();
     }
 
@@ -124,12 +149,9 @@ public class TavoliController {
             @PathVariable @Positive Long tavoloId,
             @RequestBody @Valid ModificaTavoloRequestDTO modificaDto) {
 
+        log.info("Richiesta modifica tavolo ID: {}", tavoloId);
         RisultatoModificaTavoloDTO risultato = tavoliService.modificaTavolo(tavoloId, modificaDto);
+        log.info("Tavolo ID {} modificato - {}", tavoloId, risultato.getMessaggio());
         return ResponseEntity.ok(risultato);
     }
-
-    // TODO: data ordine. (cronjob) eliminare ordini del giorno precedente
-
-    // TODO: Logger
-
 }
