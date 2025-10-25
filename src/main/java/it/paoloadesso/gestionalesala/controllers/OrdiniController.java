@@ -183,6 +183,23 @@ public class OrdiniController {
     }
 
     @Operation(
+            summary = "Modifica stato operativo di un ordine",
+            description = "Permette di modificare lo stato di un ordine tra IN_ATTESA, IN_PREPARAZIONE e SERVITO. " +
+                    "Può modificare anche ordini chiusi (riaprendoli). " +
+                    "Non può impostare lo stato CHIUSO (usa l'endpoint dedicato). " +
+                    "Utile per il workflow operativo in cucina e sala. " +
+                    "Include note opzionali per tracciare il motivo della modifica."
+    )
+    @PatchMapping("/modifica-stato/{idOrdine}")
+    public ResponseEntity<RisultatoModificaStatoOrdineDTO> modificaStatoOrdine(
+            @PathVariable @Positive Long idOrdine,
+            @RequestBody @Valid ModificaStatoOrdineRequestDTO request) {
+
+        RisultatoModificaStatoOrdineDTO risultato = ordiniService.modificaStatoOrdine(idOrdine, request);
+        return ResponseEntity.ok(risultato);
+    }
+
+    @Operation(
             summary = "Chiudi un ordine",
             description = "Chiude definitivamente un ordine impostando il suo stato a CHIUSO. " +
                     "Se tutti gli ordini del tavolo sono chiusi, il tavolo viene automaticamente " +

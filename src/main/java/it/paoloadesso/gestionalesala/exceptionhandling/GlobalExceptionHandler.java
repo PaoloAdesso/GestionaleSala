@@ -176,6 +176,29 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 
+    @ExceptionHandler(OrdineNotFoundException.class)
+    public ResponseEntity<ErrorResponseDTO> handleOrdineNotFound(OrdineNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                                .body(new ErrorResponseDTO(ex.getMessage(), "404", "ORDINE_NON_TROVATO"));
+    }
+
+    @ExceptionHandler(OrdineChiusoException.class)
+    public ResponseEntity<ErrorResponseDTO> handleOrdineChiuso(OrdineChiusoException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(new ErrorResponseDTO(ex.getMessage(), "409", "ORDINE_GIA_CHIUSO"));
+    }
+
+    @ExceptionHandler(ProdottiNonPagatiException.class)
+    public ResponseEntity<ErrorResponseDTO> handleProdottiNonPagati(ProdottiNonPagatiException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponseDTO(ex.getMessage(), "400", "PRODOTTI_NON_PAGATI"));
+    }
+
+    @ExceptionHandler(ModificaStatoNonPermessaException.class)
+    public ResponseEntity<ErrorResponseDTO> handleModificaStatoNonPermessa(ModificaStatoNonPermessaException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponseDTO(ex.getMessage(), "400", "MODIFICA_STATO_NON_PERMESSA"));
+    }
 
     /**
      * Metodo di aiuto: quando manca un parametro, questo metodo decide quale messaggio mostrare.

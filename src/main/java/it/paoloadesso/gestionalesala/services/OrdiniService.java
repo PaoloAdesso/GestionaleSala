@@ -9,6 +9,10 @@ import it.paoloadesso.gestionalesala.entities.keys.OrdiniProdottiId;
 import it.paoloadesso.gestionalesala.enums.StatoOrdine;
 import it.paoloadesso.gestionalesala.enums.StatoPagato;
 import it.paoloadesso.gestionalesala.enums.StatoTavolo;
+import it.paoloadesso.gestionalesala.exceptionhandling.ModificaStatoNonPermessaException;
+import it.paoloadesso.gestionalesala.exceptionhandling.OrdineChiusoException;
+import it.paoloadesso.gestionalesala.exceptionhandling.OrdineNotFoundException;
+import it.paoloadesso.gestionalesala.exceptionhandling.ProdottiNonPagatiException;
 import it.paoloadesso.gestionalesala.mapper.OrdiniMapper;
 import it.paoloadesso.gestionalesala.repositories.OrdiniProdottiRepository;
 import it.paoloadesso.gestionalesala.repositories.OrdiniRepository;
@@ -134,18 +138,12 @@ public class OrdiniService {
         // Verifica ordine
         OrdiniEntity ordine = ordiniRepository.findByIdOrdine(idOrdine);
         if (ordine == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    "ORDINE_NON_TROVATO: Ordine con ID " + idOrdine + " non trovato"
-            );
+            throw new OrdineNotFoundException(idOrdine);
         }
 
         // Verifica stato ordine
         if (ordine.getStatoOrdine() == StatoOrdine.CHIUSO) {
-            throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "ORDINE_GIA_CHIUSO: L'ordine con ID " + idOrdine + " risulta già chiuso"
-            );
+            throw new OrdineChiusoException(idOrdine);
         }
         // Verifica che tutti i prodotti dell'ordine risultino pagati
         List<OrdiniProdottiEntity> prodottiNonPagati =
@@ -428,6 +426,45 @@ public class OrdiniService {
 
         // Creo il risultato con informazioni complete su successi e fallimenti
         return creaRisultatoModifica(ordineAggiornato, prodottiAggiunti, prodottiRimossi, errori, requestDto);
+    }
+
+    @Transactional
+    public RisultatoModificaStatoOrdineDTO modificaStatoOrdine(Long idOrdine, ModificaStatoOrdineRequestDTO request) {
+
+        // Trova l'ordine
+        OrdiniEntity ordine = ordiniRepository.findById(idOrdine)
+                .orElseThrow(() -> new OrdineNotFoundException(idOrdine));
+
+        StatoOrdine vecchioStato = ordine.getStatoOrdine();
+        StatoOrdine nuovoStato = request.getNuovoStato();
+
+        // Validazione: non può impostare CHIUSO con questo endpoint
+        if (nuovoStato == StatoOrdine.CHIUSO) {
+            throw new ModificaStatoNonPermessaException(
+                    "Per chiudere l'ordine usa l'endpoint dedicato di chiusura"
+            );
+        }
+
+        // Se è già nello stato richiesto
+        if (vecchioStato == nuovoStato) {
+            return new RisultatoModificaStatoOrdineDTO(
+                    idOrdine, vecchioStato, nuovoStato, true,
+                    "Nessuna modifica: l'ordine è già nello stato " + nuovoStato
+            );
+        }
+
+        // Modifica semplice
+        ordine.setStatoOrdine(nuovoStato);
+        ordiniRepository.save(ordine);
+
+        String messaggio = String.format("Stato ordine modificato da %s a %s", vecchioStato, nuovoStato);
+
+        log.info("Ordine {}: {} → {} {}", idOrdine, vecchioStato, nuovoStato,
+                request.getNote() != null ? "(Note: " + request.getNote() + ")" : "");
+
+        return new RisultatoModificaStatoOrdineDTO(
+                idOrdine, vecchioStato, nuovoStato, true, messaggio
+        );
     }
 
     @Transactional
