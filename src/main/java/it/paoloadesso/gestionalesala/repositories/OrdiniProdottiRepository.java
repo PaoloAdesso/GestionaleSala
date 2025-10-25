@@ -6,6 +6,7 @@ import it.paoloadesso.gestionalesala.entities.keys.OrdiniProdottiId;
 import it.paoloadesso.gestionalesala.enums.StatoOrdine;
 import it.paoloadesso.gestionalesala.enums.StatoPagato;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -36,4 +37,9 @@ public interface OrdiniProdottiRepository extends JpaRepository<OrdiniProdottiEn
     // Conta totale prodotti in un ordine
     @Query("SELECT COUNT(op) FROM OrdiniProdottiEntity op WHERE op.ordine.idOrdine = :idOrdine")
     Integer countByOrdineIdOrdine(@Param("idOrdine") Long idOrdine);
+
+    @Modifying
+    @Query(value = "DELETE FROM ordini_prodotti WHERE id_ordine IN :idsOrdiniVecchi", nativeQuery = true)
+    void deleteAllByOrdiniIds(@Param("idsOrdiniVecchi") List<Long> idsOrdiniVecchi);
+
 }

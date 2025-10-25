@@ -3,7 +3,6 @@ package it.paoloadesso.gestionalesala.services;
 import it.paoloadesso.gestionalesala.dto.*;
 import it.paoloadesso.gestionalesala.entities.OrdiniEntity;
 import it.paoloadesso.gestionalesala.entities.OrdiniProdottiEntity;
-import it.paoloadesso.gestionalesala.entities.ProdottiEntity;
 import it.paoloadesso.gestionalesala.entities.TavoliEntity;
 import it.paoloadesso.gestionalesala.enums.StatoTavolo;
 import it.paoloadesso.gestionalesala.exceptionhandling.ModificaVuotaException;
@@ -113,32 +112,16 @@ public class TavoliService {
         log.info("Tavolo con ID {} cancellato (soft delete)", idTavolo);
     }
 
-    @Scheduled(cron = "${ristorante.cron-reset-tavoli}", zone = "Europe/Rome")
-    public void liberaTuttiITavoliProgrammato() {
-        log.info("Reset automatico tavoli - Inizio turno lavorativo");
-        resetStatoTavolo();
-    }
-
+    @Transactional
     public void liberaTuttiITavoli() {
-        log.info("Reset manuale tavoli richiesto");
-        resetStatoTavolo();
-    }
+        log.info("Reset tavoli richiesto");
 
-    private void resetStatoTavolo() {
         List<TavoliEntity> tuttiITavoli = tavoliRepository.findAll();
 
         tuttiITavoli.forEach(tavolo -> tavolo.setStatoTavolo(StatoTavolo.LIBERO));
-        // Alternativa con Stream (commentata)
-//        List<TavoliEntity> tavoliAggiornati = tuttiITavoli.stream()
-//                .map(tavolo -> {
-//                    tavolo.setStatoTavolo(StatoTavolo.LIBERO);
-//                    return tavolo;
-//                })
-//                .toList();
-//
-//        tavoliRepository.saveAll(tavoliAggiornati);
         tavoliRepository.saveAll(tuttiITavoli);
-        log.info("Reset completato. Lo stato di tutti i tavoli è stato reimpostato a «LIBERO».");
+
+        log.info("Reset completato. Lo stato di tutti i {} tavoli è stato reimpostato a «LIBERO».", tuttiITavoli.size());
     }
 
     public TavoliConDettaglioDeleteDTO ripristinaSingoloTavolo(@Positive Long idTavolo) {

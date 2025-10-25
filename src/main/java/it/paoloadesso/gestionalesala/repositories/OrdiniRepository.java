@@ -1,8 +1,6 @@
 package it.paoloadesso.gestionalesala.repositories;
 
-import it.paoloadesso.gestionalesala.dto.OrdiniDTO;
 import it.paoloadesso.gestionalesala.entities.OrdiniEntity;
-import it.paoloadesso.gestionalesala.entities.ProdottiEntity;
 import it.paoloadesso.gestionalesala.enums.StatoOrdine;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -58,4 +56,13 @@ public interface OrdiniRepository extends JpaRepository<OrdiniEntity, Long> {
     @Query(value = "SELECT EXISTS(SELECT 1 FROM ordini WHERE id_ordine = :id AND deleted = true)",
             nativeQuery = true)
     boolean existsDeletedOrdine(@Param("id") Long id);
+
+    @Query(value = "SELECT * FROM ordini WHERE data_ordine < :data", nativeQuery = true)
+    List<OrdiniEntity> findAllByDataOrdineBeforeIncludingDeleted(@Param("data") LocalDate data);
+
+    @Modifying
+    @Query(value = "DELETE FROM ordini WHERE id_ordine IN :idsOrdiniVecchi", nativeQuery = true)
+    void deleteAllByOrdiniIds(@Param("idsOrdiniVecchi") List<Long> idsOrdiniVecchi);
+
+    List<OrdiniEntity> findByDataOrdineLessThanEqual(LocalDate unGiornoFa);
 }

@@ -221,9 +221,9 @@ public class OrdiniService {
                 .collect(Collectors.toList());
     }
 
-    public List<TavoloConOrdiniChiusiDTO> getOrdiniChiusiDiOggi() {
+    public List<TavoloConOrdiniChiusiDTO> getOrdiniChiusiDiOggiLavorativo() {
         // Carica tutti gli ordini chiusi
-        List<OrdiniEntity> ordiniChiusiDiOggi = ordiniRepository.findByStatoOrdineAndDataOrdine(StatoOrdine.CHIUSO, LocalDate.now());
+        List<OrdiniEntity> ordiniChiusiDiOggi = ordiniRepository.findByStatoOrdineAndDataOrdine(StatoOrdine.CHIUSO, oggiLavorativo());
 
         // Raggruppa per tavolo
         Map<Long, List<OrdiniEntity>> ordiniPerTavolo = ordiniChiusiDiOggi.stream()
@@ -464,6 +464,60 @@ public class OrdiniService {
         log.info("Ordine con ID {} cancellato definitivamente (hard delete)", idOrdine);
     }
 
+    @Transactional
+    public void eliminaOrdiniSettimanaPrecedente() {
+        LocalDate unaSettimanaFa = oggiLavorativo().minusDays(7);
+
+        List<OrdiniEntity> ordiniVecchi = ordiniRepository.findAllByDataOrdineBeforeIncludingDeleted(unaSettimanaFa);
+
+        if (ordiniVecchi.isEmpty()) {
+            log.info("Nessun ordine della settimana precedente da eliminare");
+            return;
+        }
+
+        // Estrai gli ID degli ordini
+        List<Long> ordiniIds = ordiniVecchi.stream()
+                .map(OrdiniEntity::getIdOrdine)
+                .toList();
+
+        log.info("Trovati {} ordini da eliminare (più vecchi di {})", ordiniIds.size(), unaSettimanaFa);
+
+        // Prima elimina tutti i prodotti collegati
+        ordiniProdottiRepository.deleteAllByOrdiniIds(ordiniIds);
+
+        // Poi elimina gli ordini
+        ordiniRepository.deleteAllByOrdiniIds(ordiniIds);
+
+        log.info("Eliminazione completata: {} ordini rimossi definitivamente", ordiniIds.size());
+    }
+
+    @Transactional
+    public void eliminaOrdiniGiornoPrecedente() {
+        LocalDate ieriLavorativo = oggiLavorativo().minusDays(1);
+
+        List<OrdiniEntity> ordiniVecchi = ordiniRepository.findByDataOrdineLessThanEqual(ieriLavorativo);
+
+        if (ordiniVecchi.isEmpty()) {
+            log.info("Nessun ordine di ieri da eliminare");
+            return;
+        }
+
+        log.info("Trovati {} ordini di ieri da eliminare (soft delete)", ordiniVecchi.size());
+
+        // Prima elimina tutti i prodotti collegati (soft delete)
+        for (OrdiniEntity ordine : ordiniVecchi) {
+            List<OrdiniProdottiEntity> prodottiOrdine = ordiniProdottiRepository.findByOrdineIdOrdine(ordine.getIdOrdine());
+            if (!prodottiOrdine.isEmpty()) {
+                ordiniProdottiRepository.deleteAll(prodottiOrdine);
+            }
+        }
+
+        // Poi elimina gli ordini (soft delete)
+        ordiniRepository.deleteAll(ordiniVecchi);
+
+        log.info("Eliminazione completata: {} ordini impostati come eliminati (soft delete)", ordiniVecchi.size());
+    }
+
     public List<OrdiniDTO> getAllOrdiniEliminati() {
         List<OrdiniEntity> entities = ordiniRepository.findAllOrdiniEliminati();
         return entities.stream()
@@ -499,7 +553,6 @@ public class OrdiniService {
         log.info("Ordine {} ripristinato con successo", idOrdine);
         return ordiniMapper.ordiniEntityToDto(ordineRipristinato);
     }
-
 
     private void controlloSeIlTavoloEsiste(Long idTavolo) {
         if (idTavolo == null || !tavoliRepository.existsById(idTavolo)) {
@@ -694,5 +747,6 @@ public class OrdiniService {
     private LocalDate oggiLavorativo() {
         return dataLavorativaUtil.getDataLavorativa();
     }
+
 
 }

@@ -6,8 +6,6 @@ import it.paoloadesso.gestionalesala.exceptionhandling.ModificaVuotaException;
 import it.paoloadesso.gestionalesala.exceptionhandling.ProdottoEliminatoException;
 import it.paoloadesso.gestionalesala.exceptionhandling.ProdottoNotFoundException;
 import it.paoloadesso.gestionalesala.mapper.ProdottiMapper;
-import it.paoloadesso.gestionalesala.repositories.OrdiniProdottiRepository;
-import it.paoloadesso.gestionalesala.repositories.OrdiniRepository;
 import it.paoloadesso.gestionalesala.repositories.ProdottiRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.constraints.NotBlank;
@@ -28,14 +26,10 @@ public class ProdottiService {
     private static final Logger log = LoggerFactory.getLogger(ProdottiService.class);
     private final ProdottiRepository prodottiRepository;
     private final ProdottiMapper prodottiMapper;
-    private final OrdiniProdottiRepository ordiniProdottiRepository;
-    private final OrdiniRepository ordiniRepository;
 
-    public ProdottiService(ProdottiRepository prodottiRepository, ProdottiMapper prodottiMapper, OrdiniProdottiRepository ordiniProdottiRepository, OrdiniRepository ordiniRepository) {
+    public ProdottiService(ProdottiRepository prodottiRepository, ProdottiMapper prodottiMapper) {
         this.prodottiRepository = prodottiRepository;
         this.prodottiMapper = prodottiMapper;
-        this.ordiniProdottiRepository = ordiniProdottiRepository;
-        this.ordiniRepository = ordiniRepository;
     }
 
     @Transactional

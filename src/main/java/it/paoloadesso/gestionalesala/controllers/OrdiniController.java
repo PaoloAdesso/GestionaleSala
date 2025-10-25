@@ -6,6 +6,8 @@ import it.paoloadesso.gestionalesala.dto.*;
 import it.paoloadesso.gestionalesala.services.OrdiniService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +21,8 @@ import java.util.List;
 @Validated
 @Tag(name = "Gestione Ordini", description = "API per la chiusura e consultazione storico ordini")
 public class OrdiniController {
+
+    private static final Logger log = LoggerFactory.getLogger(OrdiniController.class);
 
     private final OrdiniService ordiniService;
 
@@ -139,7 +143,7 @@ public class OrdiniController {
     )
     @GetMapping("/chiusi-oggi")
     public ResponseEntity<List<TavoloConOrdiniChiusiDTO>> getOrdiniChiusiDiOggi() {
-        return ResponseEntity.ok(ordiniService.getOrdiniChiusiDiOggi());
+        return ResponseEntity.ok(ordiniService.getOrdiniChiusiDiOggiLavorativo());
     }
 
     @Operation(
@@ -209,7 +213,7 @@ public class OrdiniController {
                     "L'ordine rimane nel database per audit trail ma non è più visibile " +
                     "nelle operazioni normali. Operazione irreversibile tramite API standard."
     )
-    @DeleteMapping("{idOrdine}")
+    @DeleteMapping("/{idOrdine}")
     public ResponseEntity<Void> deleteOrdine(@PathVariable @Positive Long idOrdine){
         ordiniService.eliminaOrdine(idOrdine);
         return ResponseEntity.noContent().build();
@@ -219,9 +223,30 @@ public class OrdiniController {
             summary = "Elimina un ordine",
             description = "Elimina definitivamente un ordine ed i relativi prodotti ordinati collegati." +
                     " Operazione irreversibile."    )
-    @DeleteMapping("hard-delete/{idOrdine}")
+    @DeleteMapping("/hard-delete/{idOrdine}")
     public ResponseEntity<Void> hardDeleteOrdine(@PathVariable @Positive Long idOrdine){
         ordiniService.eliminaFisicamenteOrdine(idOrdine);
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(
+            summary = "Elimina tutti gli ordini più vecchi di una settimana",
+            description = "Elimina definitivamente gli ordini ed i relativi prodotti ordinati collegati, più vecchi di una settimana." +
+                    " Operazione irreversibile."    )
+    @DeleteMapping("/hard-delete-ordini-settimana-precedente")
+    public ResponseEntity<Void> hardDeleteOrdiniSettimanaPrecedente(){
+        ordiniService.eliminaOrdiniSettimanaPrecedente();
+        log.info("Effettuata eliminazione manuale degli ordini della settimana precedente");
+        return ResponseEntity.noContent().build();
+    }
+
+    @Operation(
+            summary = "Elimina tutti gli ordini del giorno precedente (soft-delete)",
+            description = "Elimina gli ordini ed i relativi prodotti ordinati collegati del giorno precedente")
+    @DeleteMapping("/soft-delete-ordini-giorno-precedente")
+    public ResponseEntity<Void> hardDeleteOrdiniVecchi(){
+        ordiniService.eliminaOrdiniGiornoPrecedente();
+        log.info("Effettuata eliminazione manuale degli ordini di ieri (soft-delete)");
         return ResponseEntity.noContent().build();
     }
 }
