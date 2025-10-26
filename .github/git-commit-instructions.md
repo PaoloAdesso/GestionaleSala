@@ -9,7 +9,7 @@ Obiettivo: generare messaggi di commit chiari e strutturati come “Oggetto + se
 - Corpo: sezioni con titoli Markdown `###` e liste puntate `-` molto specifiche.
 
 Esempio di oggetto:  
-Implementa CRUD prodotti e documentazione Swagger completa
+Implementati CRUD prodotti e documentazione Swagger completa
 
 ## 2) Sezioni consigliate per il corpo
 
@@ -125,7 +125,7 @@ Per ogni migration (nuova O modificata), includi:
 
 Esempio A — Aggiunta DTO e mapping
 
-Oggetto: Aggiungi OrderDTO e mapping MapStruct
+Oggetto: Aggiunti OrderDTO e mapping MapStruct
 
 ### DTO e Mapping
 - Creato `OrderDTO.java` con campi `id`, `customerName`, `totalAmount`.
@@ -142,7 +142,7 @@ Oggetto: Aggiungi OrderDTO e mapping MapStruct
 
 Esempio B — Estensione service e endpoint sala
 
-Oggetto: Estendi gestione sala e pagamenti
+Oggetto: Estesa gestione sala e pagamenti
 
 ### Endpoint REST
 - Aggiunto `PATCH /gestione-sala/libera-tutti-i-tavoli`.
@@ -161,7 +161,7 @@ Oggetto: Estendi gestione sala e pagamenti
 
 Esempio C — Modifica migration esistente e correzione schema
 
-Oggetto: Correggi migration prodotti e aggiungi indici
+Oggetto: Corrette migration prodotti e aggiunti indici
 
 ### Migrazioni Database
 - **Modificato** `V3__create_products_table.sql`:

@@ -61,7 +61,7 @@ public class ModificaOrdineRequestDTO {
 
     @Override
     public String toString() {
-        return "ModificaOrdineRequestDto{" +
+        return "ModificaOrdineRequestDTO{" +
                 "nuovoIdTavolo=" + nuovoIdTavolo +
                 ", prodottiDaAggiungere=" + prodottiDaAggiungere +
                 ", prodottiDaRimuovere=" + prodottiDaRimuovere +

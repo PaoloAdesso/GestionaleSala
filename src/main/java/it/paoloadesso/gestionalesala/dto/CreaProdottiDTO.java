@@ -1,21 +1,22 @@
 package it.paoloadesso.gestionalesala.dto;
 
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
 
 public class CreaProdottiDTO {
 
-    @NotBlank
+    @NotBlank(message = "Il nome del prodotto è obbligatorio")
+    @Size(min = 1, max = 100, message = "Il nome deve essere tra 1 e 100 caratteri")
     private String nome;
 
-    @NotBlank
+    @NotBlank(message = "La categoria è obbligatoria")
+    @Size(min = 1, max = 50, message = "La categoria deve essere tra 1 e 50 caratteri")
     private String categoria;
 
-    @NotNull
-    @DecimalMin(value = "0.01")
+    @NotNull(message = "Il prezzo è obbligatorio")
+    @DecimalMin(value = "0.01", message = "Il prezzo deve essere maggiore di 0")
+    @Digits(integer = 6, fraction = 2, message = "Prezzo non valido")
     private BigDecimal prezzo;
 
     public CreaProdottiDTO(String nome, String categoria, BigDecimal prezzo) {
@@ -49,5 +50,14 @@ public class CreaProdottiDTO {
 
     public void setPrezzo(BigDecimal prezzo) {
         this.prezzo = prezzo;
+    }
+
+    @Override
+    public String toString() {
+        return "CreaProdottiDTO{" +
+                "nome='" + nome + '\'' +
+                ", categoria='" + categoria + '\'' +
+                ", prezzo=" + prezzo +
+                '}';
     }
 }

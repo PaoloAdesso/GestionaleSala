@@ -3,6 +3,8 @@ package it.paoloadesso.gestionalesala.entities;
 import jakarta.persistence.*;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -13,6 +15,8 @@ import java.time.LocalDateTime;
 @SQLDelete(sql = "UPDATE prodotti SET deleted = true, deleted_at = NOW() WHERE id_prodotto = ?")
 @SQLRestriction("deleted = false")
 public class ProdottiEntity {
+
+    private static final Logger log = LoggerFactory.getLogger(ProdottiEntity.class);
 
     @Id
     @SequenceGenerator(name = "prodotti_id_gen", sequenceName = "prodotti_id_seq", allocationSize = 1)
@@ -102,6 +106,7 @@ public class ProdottiEntity {
     protected void onSoftDelete() {
         this.deleted = true;
         this.deletedAt = LocalDateTime.now();
-        System.out.println("Soft delete prodotto «" + nome + "» con ID " + id);
+        log.info("Soft delete eseguito del prodotto '{}'", nome);
+        log.debug("Stato del prodotto al momento della cancellazione - ID: {}, Categoria: {}", id, categoria);
     }
 }
