@@ -75,6 +75,13 @@
             <version>${mapstruct.version}</version>
         </dependency>
 
+        <!-- Override logback-core per fix CVE-2025-11226 -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-core</artifactId>
+            <version>1.5.19</version>
+        </dependency>
+
         <!-- Test -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- Console con colori ottimizzata per dark mode -->
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%boldGreen(%d{HH:mm:ss.SSS}) %boldYellow([%thread]) %highlight(%-5level) %boldMagenta(%-25.25logger{25}) %boldGreen(→) %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- File nella cartella ProgettoRistorazione/logs -->
+    <appender name="GESTIONALE_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>../logs/gestionale-sala.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>../logs/gestionale-sala.%d{yyyy-MM-dd}.gz</fileNamePattern>
+            <maxHistory>7</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- Tuoi servizi -->
+    <logger name="it.paoloadesso.gestionalesala.services" level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="GESTIONALE_FILE" />
+    </logger>
+
+    <!-- Query SQL con parametri -->
+    <logger name="org.hibernate.SQL" level="DEBUG" additivity="false">
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="GESTIONALE_FILE" />
+    </logger>
+
+    <!-- Parametri delle query (Hibernate 6) -->
+    <logger name="org.hibernate.orm.jdbc.bind" level="TRACE" additivity="false">
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="GESTIONALE_FILE" />
+    </logger>
+
+    <!-- Spring Boot silenzioso -->
+    <logger name="org.springframework" level="WARN" />
+    <logger name="com.zaxxer.hikari" level="WARN" />
+
+    <!-- Root logger -->
+    <root level="INFO">
+        <appender-ref ref="CONSOLE" />
+        <appender-ref ref="GESTIONALE_FILE" />
+    </root>
+</configuration>
