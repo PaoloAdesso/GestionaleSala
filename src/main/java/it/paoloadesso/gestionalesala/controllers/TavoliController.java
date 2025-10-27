@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/gestione-tavoli")
+@RequestMapping("/api/tavoli")
 @Validated
 @Tag(name = "Gestione Tavoli", description = "API per la gestione dei tavoli")
 public class TavoliController {

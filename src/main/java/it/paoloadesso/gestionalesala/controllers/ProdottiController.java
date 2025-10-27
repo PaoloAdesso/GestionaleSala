@@ -19,7 +19,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("prodotti")
+@RequestMapping("/api/prodotti")
 @Validated
 @Tag(name = "Gestione Prodotti", description = "API per gestire il menu del ristorante: prodotti attivi, eliminati e categorie")
 public class ProdottiController {
@@ -59,7 +59,7 @@ public class ProdottiController {
                     "disponibili nel menu del ristorante con informazioni su nome, categoria e prezzo. " +
                     "Utile per visualizzare il catalogo completo."
     )
-    @GetMapping
+    @GetMapping("/tutti")
     public ResponseEntity<List<ProdottiDTO>> getAllProdotti() {
         log.debug("Richiesta tutti i prodotti attivi");
         List<ProdottiDTO> prodotti = prodottiService.getAllProdotti();
@@ -180,7 +180,7 @@ public class ProdottiController {
                     "Non viene rimosso fisicamente per preservare l'integrità referenziale con ordini esistenti. " +
                     "Può essere ripristinato successivamente."
     )
-    @DeleteMapping("{prodottoId}")
+    @DeleteMapping("/{prodottoId}")
     public ResponseEntity<Void> eliminaSingoloProdotto(@PathVariable @Positive Long prodottoId){
         log.info("Richiesta eliminazione prodotto ID: {}", prodottoId);
         prodottiService.deleteProdotto(prodottoId);
